@@ -1,0 +1,8 @@
+﻿{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["vite/client", "jest", "node"],
+    "noEmit": true
+  },
+  "include": ["src", "jest.setup.ts", "vite-env.d.ts"]
+}

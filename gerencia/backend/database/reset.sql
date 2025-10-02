@@ -1,0 +1,14 @@
+﻿DROP TABLE IF EXISTS `personal_access_tokens`;
+DROP TABLE IF EXISTS `password_reset_tokens`;
+DROP TABLE IF EXISTS `failed_jobs`;
+DROP TABLE IF EXISTS `jobs`;
+DROP TABLE IF EXISTS `fila_job`;
+DROP TABLE IF EXISTS `auditoria_ia`;
+DROP TABLE IF EXISTS `log_status_lead`;
+DROP TABLE IF EXISTS `objecao`;
+DROP TABLE IF EXISTS `mensagem`;
+DROP TABLE IF EXISTS `lead`;
+DROP TABLE IF EXISTS `instancia_whatsapp`;
+DROP TABLE IF EXISTS `usuario`;
+DROP TABLE IF EXISTS `conta`;
+DROP TABLE IF EXISTS `migrations`;
