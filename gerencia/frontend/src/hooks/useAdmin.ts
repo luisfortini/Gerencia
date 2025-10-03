@@ -1,6 +1,6 @@
-﻿import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { ContaResumo } from '@/types';
+import type { ContaResumo, EvolutionConfig } from '@/types';
 
 export const useAdminOverview = () =>
   useQuery({
@@ -19,3 +19,26 @@ export const useAdminContas = () =>
       return data;
     },
   });
+
+export const useEvolutionConfig = () =>
+  useQuery({
+    queryKey: ['evolution-config'],
+    queryFn: async () => {
+      const { data } = await api.get<EvolutionConfig>('/admin/settings/evolution');
+      return data;
+    },
+  });
+
+export const useUpdateEvolutionConfig = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: { base_url?: string; api_key?: string | null; verify_ssl?: boolean }) => {
+      const { data } = await api.put<EvolutionConfig>('/admin/settings/evolution', payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evolution-config'] });
+    },
+  });
+};
