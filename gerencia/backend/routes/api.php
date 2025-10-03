@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\Admin\SuperAdminController;
 use App\Http\Controllers\AuthController;
@@ -27,6 +27,9 @@ Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
     Route::post('instancias', [InstanciaWhatsappController::class, 'store']);
     Route::put('instancias/{instancia}', [InstanciaWhatsappController::class, 'update']);
     Route::delete('instancias/{instancia}', [InstanciaWhatsappController::class, 'destroy']);
+    Route::post('instancias/{instancia}/connect', [InstanciaWhatsappController::class, 'connect']);
+    Route::post('instancias/{instancia}/webhook/sync', [InstanciaWhatsappController::class, 'syncWebhook']);
+    Route::post('instancias/{instancia}/refresh', [InstanciaWhatsappController::class, 'refresh']);
     Route::post('instancias/{instancia}/test', [InstanciaWhatsappController::class, 'testConnection']);
 
     Route::get('objecoes', [ObjecaoController::class, 'index']);
@@ -40,5 +43,12 @@ Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
         Route::post('contas/{conta}/usuarios', [SuperAdminController::class, 'criarUsuario']);
         Route::patch('contas/{conta}/retencao', [SuperAdminController::class, 'atualizarRetencao']);
         Route::get('contas/{conta}/logs', [SuperAdminController::class, 'logs']);
+        Route::get('settings/evolution', [SuperAdminController::class, 'evolutionConfig']);
+        Route::put('settings/evolution', [SuperAdminController::class, 'updateEvolutionConfig']);
     });
 });
+
+
+
+
+

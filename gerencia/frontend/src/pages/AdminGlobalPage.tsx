@@ -1,14 +1,161 @@
-﻿import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAdminContas, useAdminOverview } from '@/hooks/useAdmin';
-import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAdminContas, useAdminOverview, useEvolutionConfig, useUpdateEvolutionConfig } from "@/hooks/useAdmin";
+import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export const AdminGlobalPage = () => {
   const { data: overview } = useAdminOverview();
   const { data: contas } = useAdminContas();
+  const evolutionConfig = useEvolutionConfig();
+  const updateEvolutionConfig = useUpdateEvolutionConfig();
+
+  const [baseUrl, setBaseUrl] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [verifySsl, setVerifySsl] = useState(true);
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  useEffect(() => {
+    if (evolutionConfig.data) {
+      setBaseUrl(evolutionConfig.data.base_url ?? "");
+      setApiKey(evolutionConfig.data.api_key ?? "");
+      setVerifySsl(evolutionConfig.data.verify_ssl);
+    }
+  }, [evolutionConfig.data?.base_url, evolutionConfig.data?.api_key, evolutionConfig.data?.verify_ssl]);
+
+  const handleEvolutionSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setFeedback(null);
+
+    const normalizedUrl = baseUrl.trim();
+    const normalizedKey = apiKey.trim();
+
+    try {
+      await updateEvolutionConfig.mutateAsync({
+        base_url: normalizedUrl,
+        api_key: normalizedKey === "" ? null : normalizedKey,
+        verify_ssl: verifySsl,
+      });
+      setFeedback({ type: "success", message: "Configurações atualizadas com sucesso." });
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? error?.message ?? "Não foi possível salvar as configurações.";
+      setFeedback({ type: "error", message });
+    }
+  };
+
+  const handleResetEvolutionUrl = async () => {
+    const fallback = evolutionConfig.data?.default_base_url?.trim();
+    if (!fallback) {
+      return;
+    }
+
+    setBaseUrl(fallback);
+    try {
+      await updateEvolutionConfig.mutateAsync({
+        base_url: fallback,
+        verify_ssl: verifySsl,
+      });
+      setFeedback({ type: "success", message: "URL restaurada para o padrão." });
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? error?.message ?? "Não foi possível restaurar a URL padrão.";
+      setFeedback({ type: "error", message });
+    }
+  };
+
+  const handleClearApiKey = async () => {
+    try {
+      await updateEvolutionConfig.mutateAsync({ api_key: null, verify_ssl: verifySsl });
+      setApiKey("");
+      setFeedback({ type: "success", message: "API key removida. Configure uma nova antes de criar instâncias." });
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? error?.message ?? "Não foi possível remover a API key.";
+      setFeedback({ type: "error", message });
+    }
+  };
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Configuração Evolution API</CardTitle>
+          <CardDescription>Gerencie rapidamente a URL, a API key e a verificação SSL utilizadas nas integrações.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleEvolutionSubmit} className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-gray-600">URL base</label>
+              <Input
+                required
+                type="url"
+                value={baseUrl}
+                onChange={(event) => setBaseUrl(event.target.value)}
+                placeholder="https://evolutionapi.seudominio.com"
+              />
+              {evolutionConfig.data?.default_base_url && (
+                <p className="text-xs text-gray-500">Padrão sugerido: {evolutionConfig.data.default_base_url}</p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-gray-600">API key</label>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  type={showApiKey ? "text" : "password"}
+                  value={apiKey}
+                  onChange={(event) => setApiKey(event.target.value)}
+                  placeholder="Cole a API key fornecida pela Evolution"
+                  className="flex-1"
+                />
+                <Button type="button" variant="outline" onClick={() => setShowApiKey((prev) => !prev)}>
+                  {showApiKey ? "Ocultar" : "Mostrar"}
+                </Button>
+                <Button type="button" variant="outline" onClick={handleClearApiKey} disabled={apiKey === ""}>
+                  Remover
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500">
+                A chave é compartilhada com todas as instâncias. Ela será injetada automaticamente quando um cliente criar uma
+                nova conexão.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                id="verify-ssl"
+                type="checkbox"
+                checked={verifySsl}
+                onChange={(event) => setVerifySsl(event.target.checked)}
+                className="h-4 w-4 rounded border border-gray-300"
+              />
+              <label htmlFor="verify-ssl" className="text-sm text-gray-700">
+                Verificar certificado SSL nas chamadas para a Evolution
+              </label>
+            </div>
+
+            {feedback && (
+              <p className={`text-xs ${feedback.type === "error" ? "text-red-600" : "text-green-600"}`}>{feedback.message}</p>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button type="submit" disabled={updateEvolutionConfig.isPending || evolutionConfig.isLoading}>
+                {updateEvolutionConfig.isPending ? "Salvando..." : "Salvar configurações"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleResetEvolutionUrl}
+                disabled={updateEvolutionConfig.isPending || !evolutionConfig.data?.default_base_url}
+              >
+                Restaurar URL padrão
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Resumo SaaS</CardTitle>
@@ -48,8 +195,8 @@ export const AdminGlobalPage = () => {
                     <div className="text-xs text-gray-500">slug: {conta.cta_slug}</div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={conta.cta_plano_tipo === 'anual' ? 'success' : 'outline'}>
-                      {conta.cta_plano_tipo === 'anual' ? 'Anual' : 'Mensal'}
+                    <Badge variant={conta.cta_plano_tipo === "anual" ? "success" : "outline"}>
+                      {conta.cta_plano_tipo === "anual" ? "Anual" : "Mensal"}
                     </Badge>
                   </TableCell>
                   <TableCell>{conta.usuarios_count}</TableCell>

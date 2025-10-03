@@ -20,4 +20,10 @@ return [
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
     ],
+
+    'evolution' => [
+        'base_url' => env('EVOLUTION_BASE_URL', 'https://evolutionapi.efortini.com.br'),
+        'api_key' => env('EVOLUTION_API_KEY'),
+        'verify_ssl' => env('EVOLUTION_VERIFY_SSL', true),
+    ],
 ];
