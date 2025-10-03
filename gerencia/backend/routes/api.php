@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use App\Http\Controllers\Admin\SuperAdminController;
 use App\Http\Controllers\AuthController;
@@ -16,7 +16,7 @@ Route::post('webhook/evolution', EvolutionWebhookController::class);
 Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
     Route::get('dashboard', DashboardController::class);
 
-    Route::get('leads', [LeadController::class, 'index']);
+    Route::get('leads', [LeadController::class, 'index']);\n    Route::post('leads', [LeadController::class, 'store']);
     Route::get('leads/{lead}', [LeadController::class, 'show']);
     Route::put('leads/{lead}', [LeadController::class, 'update']);
     Route::post('leads/{lead}/status', [LeadController::class, 'changeStatus']);

@@ -23,3 +23,5 @@ if (! function_exists('strong_keyword_detected')) {
         return false;
     }
 }
+
+//\n\nif (! function_exists('normalize_phone')) {\n    function normalize_phone(?string ): string\n    {\n         = preg_replace('/\\D+/', '', (string) ( ?? ''));\n\n        if ( === null ||  === '') {\n            return '';\n        }\n\n         = ltrim(, '0');\n\n        if ( === '') {\n            return '';\n        }\n\n        if (str_starts_with(, '55')) {\n            return ;\n        }\n\n        return '55' . ;\n    }\n}\n\n

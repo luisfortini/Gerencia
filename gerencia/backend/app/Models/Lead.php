@@ -26,14 +26,17 @@ class Lead extends Model
         'led_etapa',
         'led_valor_total',
         'led_origem',
+        'led_lorid',
+        'led_data_nascimento',
         'led_observacoes',
-        'led_ultima_atualizacao_ia'
+        'led_ultima_atualizacao_ia',
     ];
 
     protected $casts = [
         'led_status_conf' => 'float',
         'led_valor_total' => 'decimal:2',
-        'led_ultima_atualizacao_ia' => 'datetime'
+        'led_data_nascimento' => 'date',
+        'led_ultima_atualizacao_ia' => 'datetime',
     ];
 
     public function conta(): BelongsTo
@@ -44,6 +47,11 @@ class Lead extends Model
     public function instanciaWhatsapp(): BelongsTo
     {
         return $this->belongsTo(InstanciaWhatsapp::class, 'led_iwhid', 'iwh_id');
+    }
+
+    public function origem(): BelongsTo
+    {
+        return $this->belongsTo(LeadOrigem::class, 'led_lorid', 'lor_id');
     }
 
     public function responsavel(): BelongsTo
