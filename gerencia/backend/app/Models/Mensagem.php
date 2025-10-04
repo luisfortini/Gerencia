@@ -19,7 +19,12 @@ class Mensagem extends Model
         'msg_direcao',
         'msg_conteudo',
         'msg_msgid',
-        'msg_recebido_em'
+        'msg_recebido_em',
+        'msg_tipomidia',
+        'msg_urlmidia',
+        'msg_mimetype',
+        'msg_sha256',
+        'msg_tamanho'
     ];
 
     protected $casts = [
