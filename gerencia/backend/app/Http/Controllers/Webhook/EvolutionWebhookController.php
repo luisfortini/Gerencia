@@ -15,6 +15,10 @@ class EvolutionWebhookController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {
+
+        echo "Webhook recebido\n";
+        print_r($request->all());
+
         $token = $request->header('X-Webhook-Token');
 
         $instancia = InstanciaWhatsapp::where('iwh_webhook_token', $token)->first();
