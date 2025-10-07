@@ -8,6 +8,9 @@ interface LeadsTableProps {
   onOpenLead: (lead: Lead) => void;
 }
 
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
 export const LeadsTable = ({ leads, onOpenLead }: LeadsTableProps) => {
   return (
     <Table>
@@ -15,36 +18,49 @@ export const LeadsTable = ({ leads, onOpenLead }: LeadsTableProps) => {
         <TableRow>
           <TableHeaderCell>Lead</TableHeaderCell>
           <TableHeaderCell>Status</TableHeaderCell>
-          <TableHeaderCell>Confiança</TableHeaderCell>
-          <TableHeaderCell>Responsável</TableHeaderCell>
-          <TableHeaderCell>Ações</TableHeaderCell>
+          <TableHeaderCell>Confianca</TableHeaderCell>
+          <TableHeaderCell>Valor negociado</TableHeaderCell>
+          <TableHeaderCell>Responsavel</TableHeaderCell>
+          <TableHeaderCell>Acoes</TableHeaderCell>
         </TableRow>
       </TableHead>
       <TableBody>
-        {leads.map((lead) => (
-          <TableRow key={lead.led_id}>
-            <TableCell>
-              <div className="font-medium text-gray-900">{lead.led_nome}</div>
-              <div className="text-xs text-gray-500">{lead.led_email ?? 'Sem e-mail'}</div>
-            </TableCell>
-            <TableCell>
-              <StatusBadge status={lead.led_status} />
-            </TableCell>
-            <TableCell>
-              <span className="text-sm text-gray-700">{Math.round((lead.led_status_conf ?? 0) * 100)}%</span>
-            </TableCell>
-            <TableCell>
-              <span className="text-sm text-gray-600">{lead.led_responsavel_usrid ? `Usuário #${lead.led_responsavel_usrid}` : 'Não atribuído'}</span>
-            </TableCell>
-            <TableCell>
-              <Button variant="outline" size="sm" onClick={() => onOpenLead(lead)}>
-                Detalhes
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
+        {leads.map((lead) => {
+          const rawValor = lead.led_valor_total as number | string | null | undefined;
+          const valorNumerico = rawValor !== null && rawValor !== undefined ? Number(rawValor) : null;
+          const valorFormatado = valorNumerico !== null && Number.isFinite(valorNumerico)
+            ? formatCurrency(valorNumerico)
+            : 'Nao informado';
+
+          return (
+            <TableRow key={lead.led_id}>
+              <TableCell>
+                <div className="font-medium text-gray-900">{lead.led_nome}</div>
+                <div className="text-xs text-gray-500">{lead.led_email ?? 'Sem e-mail'}</div>
+              </TableCell>
+              <TableCell>
+                <StatusBadge status={lead.led_status} />
+              </TableCell>
+              <TableCell>
+                <span className="text-sm text-gray-700">{Math.round((lead.led_status_conf ?? 0) * 100)}%</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-sm text-gray-700">{valorFormatado}</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-sm text-gray-600">
+                  {lead.led_responsavel_usrid ? `Usuario #${lead.led_responsavel_usrid}` : 'Nao atribuido'}
+                </span>
+              </TableCell>
+              <TableCell>
+                <Button variant="outline" size="sm" onClick={() => onOpenLead(lead)}>
+                  Detalhes
+                </Button>
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );
 };
-
