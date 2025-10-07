@@ -29,34 +29,44 @@ class LeadStatusService
             }
         }
 
-        return $this->persistStatus($lead, $novoStatus, LeadStatusOrigem::IA, null, [
+        $retrocedeu = $this->retrocedeu($lead->led_status, $novoStatus);
+
+        $extras = [
             'status_conf' => $response->statusConfidence,
             'valor_total' => $response->valorTotal,
-            'objecao' => $response->objecao
-        ]);
+            'objecao' => $response->objecao,
+        ];
+
+        if ($retrocedeu) {
+            $extras['motivo'] = Arr::get($response->detalhes, 'motivo_retrocesso')
+                ?? Arr::get($response->detalhes, 'observacoes_relevantes')
+                ?? 'Retrocesso automatico IA';
+        }
+
+        return $this->persistStatus($lead, $novoStatus, LeadStatusOrigem::IA, null, $extras);
     }
 
     public function applyManual(Lead $lead, string $novoStatus, Usuario $usuario, ?string $motivo, ?float $valorTotal = null): bool
     {
         if ($lead->led_status === LeadStatus::GANHO->value && $novoStatus !== LeadStatus::GANHO->value) {
-            throw new \InvalidArgumentException('Ganho nÃƒÂ£o pode ser revertido sem registrar retrocesso.');
+            throw new \InvalidArgumentException('Ganho nao pode ser revertido sem registrar retrocesso.');
         }
 
         if (! $this->podeMudarEtapa($lead->led_status, $novoStatus)) {
-            throw new \InvalidArgumentException('TransiÃƒÂ§ÃƒÂ£o de status nÃƒÂ£o permitida.');
+            throw new \InvalidArgumentException('Transicao de status nao permitida.');
         }
 
         if ($novoStatus === LeadStatus::GANHO->value && $valorTotal === null) {
-            throw new \InvalidArgumentException('Valor total obrigatÃƒÂ³rio para Ganho.');
+            throw new \InvalidArgumentException('Valor total obrigatorio para Ganho.');
         }
 
         if ($this->retrocedeu($lead->led_status, $novoStatus) && empty($motivo)) {
-            throw new \InvalidArgumentException('Motivo obrigatÃƒÂ³rio ao retroceder etapa.');
+            throw new \InvalidArgumentException('Motivo obrigatorio ao retroceder etapa.');
         }
 
         return $this->persistStatus($lead, $novoStatus, LeadStatusOrigem::HUMANO, $usuario, [
             'motivo' => $motivo,
-            'valor_total' => $valorTotal
+            'valor_total' => $valorTotal,
         ]);
     }
 

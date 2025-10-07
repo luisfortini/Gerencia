@@ -24,6 +24,6 @@ class TieredIaService
             }
         }
 
-        throw new RuntimeException('Nenhum provedor IA disponÃƒÂ­vel: ' . implode(' | ', $exceptions));
+        throw new RuntimeException('Nenhum provedor IA disponivel: ' . implode(' | ', $exceptions));
     }
 }
