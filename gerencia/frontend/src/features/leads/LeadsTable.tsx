@@ -38,7 +38,7 @@ export const LeadsTable = ({ leads, onOpenLead }: LeadsTableProps) => {
             </TableCell>
             <TableCell>
               <Button variant="outline" size="sm" onClick={() => onOpenLead(lead)}>
-                Abrir
+                Detalhes
               </Button>
             </TableCell>
           </TableRow>
@@ -47,3 +47,4 @@ export const LeadsTable = ({ leads, onOpenLead }: LeadsTableProps) => {
     </Table>
   );
 };
+

@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
+import type { MouseEvent, PointerEvent } from 'react';
 import {
   DndContext,
   PointerSensor,
@@ -19,7 +20,7 @@ const statusTitles: Record<LeadStatus, string> = {
   novo: 'Novo',
   qualificado: 'Qualificado',
   interessado: 'Interessado',
-  negociacao: 'Negociação',
+  negociacao: 'Negociacao',
   follow_up: 'Follow-up',
   ganho: 'Ganho',
   perdido: 'Perdido',
@@ -27,9 +28,13 @@ const statusTitles: Record<LeadStatus, string> = {
 
 const statusOrder: LeadStatus[] = ['novo', 'qualificado', 'interessado', 'negociacao', 'follow_up', 'ganho', 'perdido'];
 
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
 interface KanbanBoardProps {
   columns: Record<LeadStatus, Lead[]>;
   onChangeStatus: (lead: Lead, status: LeadStatus, payload?: { valor_total?: number; motivo?: string }) => Promise<void>;
+  onOpenLead: (lead: Lead) => void;
 }
 
 interface PendingTransition {
@@ -38,7 +43,7 @@ interface PendingTransition {
   toStatus: LeadStatus;
 }
 
-export const KanbanBoard = ({ columns, onChangeStatus }: KanbanBoardProps) => {
+export const KanbanBoard = ({ columns, onChangeStatus, onOpenLead }: KanbanBoardProps) => {
   const [board, setBoard] = useState(columns);
   const [pending, setPending] = useState<PendingTransition | null>(null);
   const [valorTotal, setValorTotal] = useState('');
@@ -55,7 +60,7 @@ export const KanbanBoard = ({ columns, onChangeStatus }: KanbanBoardProps) => {
     const isRetrocesso = statusOrder.indexOf(targetStatus) < statusOrder.indexOf(fromStatus);
     let motivo: string | undefined;
     if (isRetrocesso) {
-      motivo = window.prompt('Informe o motivo para retroceder o lead:', 'Revisão necessária') ?? undefined;
+      motivo = window.prompt('Informe o motivo para retroceder o lead:', 'Revisao necessaria') ?? undefined;
       if (!motivo) {
         return;
       }
@@ -96,7 +101,11 @@ export const KanbanBoard = ({ columns, onChangeStatus }: KanbanBoardProps) => {
     setBoard((prev) => {
       const next: Record<LeadStatus, Lead[]> = { ...prev } as Record<LeadStatus, Lead[]>;
       next[fromStatus] = next[fromStatus].filter((item) => item.led_id !== lead.led_id);
-      next[toStatus] = [...next[toStatus], { ...lead, led_status: toStatus }];
+      const atualizado = { ...lead, led_status: toStatus } as Lead;
+      if (payload?.valor_total !== undefined) {
+        atualizado.led_valor_total = payload.valor_total;
+      }
+      next[toStatus] = [...next[toStatus], atualizado];
       return next;
     });
 
@@ -107,7 +116,7 @@ export const KanbanBoard = ({ columns, onChangeStatus }: KanbanBoardProps) => {
     if (!pending) return;
     const valor = Number(valorTotal.replace(',', '.'));
     if (Number.isNaN(valor) || valor <= 0) {
-      alert('Informe um valor total válido.');
+      alert('Informe um valor total valido.');
       return;
     }
 
@@ -126,7 +135,13 @@ export const KanbanBoard = ({ columns, onChangeStatus }: KanbanBoardProps) => {
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {statusOrder.map((status) => (
-            <KanbanColumn key={status} status={status} leads={board[status]} onMove={requestStatusChange} />
+            <KanbanColumn
+              key={status}
+              status={status}
+              leads={board[status]}
+              onMove={requestStatusChange}
+              onOpenLead={onOpenLead}
+            />
           ))}
         </div>
       </DndContext>
@@ -137,7 +152,7 @@ export const KanbanBoard = ({ columns, onChangeStatus }: KanbanBoardProps) => {
           if (!open) setPending(null);
         }}
         title="Registrar lead como ganho"
-        description="Informe o valor total da negociação para concluir o ganho."
+        description="Informe o valor total da negociacao para concluir o ganho."
         footer={
           <>
             <Button variant="outline" onClick={() => setPending(null)}>
@@ -158,9 +173,10 @@ interface KanbanColumnProps {
   status: LeadStatus;
   leads: Lead[];
   onMove: (lead: Lead, fromStatus: LeadStatus, targetStatus: LeadStatus) => void;
+  onOpenLead: (lead: Lead) => void;
 }
 
-const KanbanColumn = ({ status, leads, onMove }: KanbanColumnProps) => {
+const KanbanColumn = ({ status, leads, onMove, onOpenLead }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
@@ -177,7 +193,7 @@ const KanbanColumn = ({ status, leads, onMove }: KanbanColumnProps) => {
       </div>
       <div className="flex flex-1 flex-col gap-3">
         {leads.map((lead) => (
-          <KanbanCard key={lead.led_id} lead={lead} status={status} onMove={onMove} />
+          <KanbanCard key={lead.led_id} lead={lead} status={status} onMove={onMove} onOpenLead={onOpenLead} />
         ))}
         {leads.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-gray-400">
@@ -193,18 +209,30 @@ interface KanbanCardProps {
   lead: Lead;
   status: LeadStatus;
   onMove: (lead: Lead, fromStatus: LeadStatus, targetStatus: LeadStatus) => void;
+  onOpenLead: (lead: Lead) => void;
 }
 
-const KanbanCard = ({ lead, status, onMove }: KanbanCardProps) => {
+const KanbanCard = ({ lead, status, onMove, onOpenLead }: KanbanCardProps) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `lead-${lead.led_id}`,
     data: { lead, status },
   });
 
-  const style = useMemo(() => ({
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1,
-  }), [transform, isDragging]);
+  const style = useMemo(
+    () => ({
+      transform: CSS.Translate.toString(transform),
+      opacity: isDragging ? 0.5 : 1,
+    }),
+    [transform, isDragging]
+  );
+
+  const rawValor = lead.led_valor_total as number | string | null | undefined;
+  const valorNumerico = rawValor !== null && rawValor !== undefined ? Number(rawValor) : null;
+  const valorNegociado = valorNumerico !== null && Number.isFinite(valorNumerico) ? formatCurrency(valorNumerico) : null;
+
+  const stopPropagation = (event: PointerEvent | MouseEvent) => {
+    event.stopPropagation();
+  };
 
   return (
     <div
@@ -218,13 +246,41 @@ const KanbanCard = ({ lead, status, onMove }: KanbanCardProps) => {
         <h3 className="text-sm font-semibold text-gray-900">{lead.led_nome}</h3>
         <StatusBadge status={status} />
       </div>
-      <p className="mt-2 text-xs text-gray-500">Confiança IA: {Math.round((lead.led_status_conf ?? 0) * 100)}%</p>
+      <p className="mt-2 text-xs text-gray-500">Confianca IA: {Math.round((lead.led_status_conf ?? 0) * 100)}%</p>
+      <p className="mt-1 text-xs text-gray-500">Valor negociado: {valorNegociado ?? 'Nao informado'}</p>
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
-        <Button variant="outline" size="sm" onClick={() => onMove(lead, status, 'ganho')}>
+        <Button
+          size="sm"
+          variant="outline"
+          onPointerDown={stopPropagation}
+          onClick={(event) => {
+            stopPropagation(event);
+            onOpenLead(lead);
+          }}
+        >
+          Detalhes
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onPointerDown={stopPropagation}
+          onClick={(event) => {
+            stopPropagation(event);
+            onMove(lead, status, 'ganho');
+          }}
+        >
           Marcar como ganho
         </Button>
         {status !== 'novo' ? (
-          <Button variant="ghost" size="sm" onClick={() => onMove(lead, status, 'interessado')}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onPointerDown={stopPropagation}
+            onClick={(event) => {
+              stopPropagation(event);
+              onMove(lead, status, 'interessado');
+            }}
+          >
             Retroceder
           </Button>
         ) : null}

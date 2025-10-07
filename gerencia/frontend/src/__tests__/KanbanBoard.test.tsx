@@ -23,7 +23,7 @@ describe('KanbanBoard', () => {
   it('abre modal de ganho ao acionar ação manual', () => {
     const onChangeStatus = jest.fn().mockResolvedValue(undefined);
 
-    render(<KanbanBoard columns={columns} onChangeStatus={onChangeStatus} />);
+    render(<KanbanBoard columns={columns} onChangeStatus={onChangeStatus} onOpenLead={jest.fn()} />);
 
     fireEvent.click(screen.getByText('Marcar como ganho'));
 
@@ -31,3 +31,4 @@ describe('KanbanBoard', () => {
     expect(screen.getByPlaceholderText('Ex: 1999.90')).toBeInTheDocument();
   });
 });
+

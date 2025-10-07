@@ -4,10 +4,15 @@ import { KanbanBoard } from '@/features/kanban/KanbanBoard';
 import type { Lead, LeadStatus } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
+import { LeadDrawer } from '@/features/leads/LeadDrawer';
+import { useLeadDetails } from '@/hooks/useLeadDetails';
 
 export const LeadsKanbanPage = () => {
   const { data, isLoading, refetch } = useKanbanLeads();
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
+
+  const leadDetails = useLeadDetails(selectedLeadId);
 
   const handleChangeStatus = async (
     lead: Lead,
@@ -41,11 +46,25 @@ export const LeadsKanbanPage = () => {
   }
 
   return (
-    <div className="space-y-4">
-      {isSaving ? (
-        <p className="text-xs text-gray-500">Aplicando atualização de status...</p>
-      ) : null}
-      <KanbanBoard columns={data} onChangeStatus={handleChangeStatus} />
+    <div className="flex h-full min-h-0 flex-col overflow-hidden gap-4 lg:gap-6">
+      {isSaving ? <p className="text-xs text-gray-500 shrink-0">Aplicando atualizacao de status...</p> : null}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <KanbanBoard
+          columns={data}
+          onChangeStatus={handleChangeStatus}
+          onOpenLead={(lead) => setSelectedLeadId(lead.led_id)}
+        />
+      </div>
+      <LeadDrawer
+        lead={leadDetails.data ?? null}
+        open={Boolean(selectedLeadId && leadDetails.data)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedLeadId(null);
+          }
+        }}
+      />
     </div>
   );
 };
+
