@@ -8,30 +8,33 @@ class MockIaProvider implements IaProviderContract
 {
     public function analyze(array $payload): IaResponse
     {
-        $mensagem = Str::lower($payload['ultima_mensagem'] ?? '');
+        $conteudo = $payload['mensagem']['conteudo']
+            ?? $payload['ultima_mensagem']
+            ?? '';
+
+        $mensagemNormalizada = Str::lower($conteudo);
 
         $status = 'interessado';
         $statusConf = 0.65;
-        $valor = null;
+        $valor = $payload['valor_estimado'] ?? null;
         $objecao = null;
 
-        if (str_contains($mensagem, 'pix') || str_contains($mensagem, 'paguei')) {
+        if (str_contains($mensagemNormalizada, 'pix') || str_contains($mensagemNormalizada, 'paguei')) {
             $status = 'ganho';
             $statusConf = 0.92;
-            $valor = $payload['valor_estimado'] ?? 0;
-        } elseif (str_contains($mensagem, 'caro')) {
+        } elseif (str_contains($mensagemNormalizada, 'caro') || str_contains($mensagemNormalizada, 'preco')) {
             $status = 'negociacao';
             $statusConf = 0.78;
             $objecao = 'preco';
-        } elseif (str_contains($mensagem, 'sem tempo')) {
+        } elseif (str_contains($mensagemNormalizada, 'sem tempo') || str_contains($mensagemNormalizada, 'depois')) {
             $status = 'follow_up';
             $statusConf = 0.72;
             $objecao = 'tempo';
         }
 
-        return new IaResponse($status, $statusConf, $valor, $objecao, [
+        return new IaResponse($status, $statusConf, $valor !== null ? (float) $valor : null, $objecao, [
             'provider' => 'mock',
-            'observacao' => 'SimulaÃƒÂ§ÃƒÂ£o local'
+            'observacao' => 'Fallback local',
         ]);
     }
 }

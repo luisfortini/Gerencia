@@ -19,6 +19,8 @@ return [
 
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
+        'verify' => env('OPENAI_VERIFY_SSL', true),
+        'timeout' => env('OPENAI_TIMEOUT', 20),
     ],
 
     'evolution' => [

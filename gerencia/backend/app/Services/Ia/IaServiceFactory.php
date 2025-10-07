@@ -13,15 +13,17 @@ class IaServiceFactory
     public function make(): TieredIaService
     {
         $tier = (int) config('ia.tier', 1);
-
-        $providers = [new MockIaProvider()];
+        $providers = [];
+        $openAiKey = config('services.openai.key');
 
         if ($tier >= 1) {
-            $providers[] = new OpenAiIaProvider(config('services.openai.key'));
+            $providers[] = new OpenAiIaProvider($openAiKey);
         }
 
-        if ($tier > 1) {
-            $providers = array_reverse($providers);
+        $providers[] = new MockIaProvider();
+
+        if ($tier <= 0) {
+            return new TieredIaService([new MockIaProvider()]);
         }
 
         return new TieredIaService($providers);

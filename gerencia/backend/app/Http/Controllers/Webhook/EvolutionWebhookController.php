@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessIaJob;
 use App\Models\InstanciaWhatsapp;
 use App\Models\Mensagem;
 use Carbon\Carbon;
@@ -179,8 +180,8 @@ class EvolutionWebhookController extends Controller
         }
 
         // --- Se for texto, pode chamar IA ou outro job ---
-        if ($isText) {
-            // \App\Jobs\ProcessIaJob::dispatch($mensagem);
+        if ($isText && $direcao === 'in' && filled($conteudo)) {
+            ProcessIaJob::dispatch($mensagem->msg_id);
         }
 
         return response()->json(['status' => 'ok']);
