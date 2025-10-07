@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,13 +28,12 @@ class Lead extends Model
         'led_valor_total',
         'led_origem',
         'led_observacoes',
-        'led_ultima_atualizacao_ia'
+        'led_ultima_atualizacao_ia',
     ];
 
     protected $casts = [
         'led_status_conf' => 'float',
-        'led_valor_total' => 'decimal:2',
-        'led_ultima_atualizacao_ia' => 'datetime'
+        'led_ultima_atualizacao_ia' => 'datetime',
     ];
 
     public function conta(): BelongsTo
@@ -64,5 +64,13 @@ class Lead extends Model
     public function auditoriasIa(): HasMany
     {
         return $this->hasMany(AuditoriaIa::class, 'aia_ledid', 'led_id');
+    }
+
+    protected function ledValorTotal(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value === null ? null : (float) $value,
+            set: fn ($value) => $value === null ? null : round((float) $value, 2)
+        );
     }
 }
