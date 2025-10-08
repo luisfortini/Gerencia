@@ -8,21 +8,21 @@ export const Table: React.FC<React.TableHTMLAttributes<HTMLTableElement>> = ({ c
 );
 
 export const TableHead: React.FC<React.HTMLAttributes<HTMLTableSectionElement>> = ({ className, ...props }) => (
-  <thead className={cn('bg-gray-50', className)} {...props} />
+  <thead className={cn('bg-muted/40', className)} {...props} />
 );
 
 export const TableBody: React.FC<React.HTMLAttributes<HTMLTableSectionElement>> = ({ className, ...props }) => (
-  <tbody className={cn('divide-y divide-border bg-white', className)} {...props} />
+  <tbody className={cn('divide-y divide-border bg-surface', className)} {...props} />
 );
 
 export const TableRow: React.FC<React.HTMLAttributes<HTMLTableRowElement>> = ({ className, ...props }) => (
-  <tr className={cn('hover:bg-gray-50', className)} {...props} />
+  <tr className={cn('hover:bg-muted/40', className)} {...props} />
 );
 
 export const TableHeaderCell: React.FC<React.ThHTMLAttributes<HTMLTableCellElement>> = ({ className, ...props }) => (
-  <th className={cn('px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500', className)} {...props} />
+  <th className={cn('px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground', className)} {...props} />
 );
 
 export const TableCell: React.FC<React.TdHTMLAttributes<HTMLTableCellElement>> = ({ className, ...props }) => (
-  <td className={cn('px-4 py-3 text-sm text-gray-700', className)} {...props} />
+  <td className={cn('px-4 py-3 text-sm text-foreground', className)} {...props} />
 );

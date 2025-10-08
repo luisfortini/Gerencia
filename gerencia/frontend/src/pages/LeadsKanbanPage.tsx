@@ -39,7 +39,7 @@ export const LeadsKanbanPage = () => {
           <CardTitle>Carregando Kanban...</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-500">Sincronizando leads para o quadro Kanban.</p>
+          <p className="text-sm text-muted-foreground">Sincronizando leads para o quadro Kanban.</p>
         </CardContent>
       </Card>
     );
@@ -47,7 +47,7 @@ export const LeadsKanbanPage = () => {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden gap-4 lg:gap-6">
-      {isSaving ? <p className="text-xs text-gray-500 shrink-0">Aplicando atualizacao de status...</p> : null}
+      {isSaving ? <p className="shrink-0 text-xs text-muted-foreground">Aplicando atualizacao de status...</p> : null}
       <div className="flex-1 min-h-0 overflow-hidden">
         <KanbanBoard
           columns={data}

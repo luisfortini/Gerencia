@@ -541,7 +541,7 @@ export const InstanciasPage = () => {
       return (
         <form id="instancia-create-form" onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-600" htmlFor="instancia-nome">
+            <label className="text-xs font-medium text-subtle" htmlFor="instancia-nome">
               Nome da instancia
             </label>
             <Input
@@ -554,7 +554,7 @@ export const InstanciasPage = () => {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-600" htmlFor="instancia-numero">
+            <label className="text-xs font-medium text-subtle" htmlFor="instancia-numero">
               Numero do WhatsApp
             </label>
             <Input
@@ -573,12 +573,12 @@ export const InstanciasPage = () => {
                 checked={numeroInternacional}
                 onChange={(event) => handleNumeroInternacionalToggle(event.target.checked)}
               />
-              <label htmlFor="numero-internacional" className="text-xs text-gray-600">
+              <label htmlFor="numero-internacional" className="text-xs text-subtle">
                 Numero internacional
               </label>
             </div>
 
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               O numero sera armazenado no formato internacional (ex.: 5531999999999). Deixe em branco
               para preencher depois.
             </p>
@@ -590,12 +590,12 @@ export const InstanciasPage = () => {
     if (modalStage === "connecting") {
       return (
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-sm text-subtle">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span>Gerando QRCode e aguardando a conexao com o Evolution.</span>
           </div>
 
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Abra o WhatsApp, acesse Dispositivos vinculados e escaneie o QRCode exibido abaixo. O
             codigo sera renovado automaticamente a cada 20 segundos.
           </p>
@@ -605,24 +605,24 @@ export const InstanciasPage = () => {
               <img
                 src={buildQrImageSrc(modalQr)}
                 alt="QRCode Evolution"
-                className="h-48 w-48 rounded border border-gray-200"
+                className="h-48 w-48 rounded border border-border"
               />
               {modalQr.code ? (
-                <p className="text-xs text-gray-700 break-all">
+                <p className="text-xs text-foreground break-all">
                   Codigo: <code className="break-all">{modalQr.code}</code>
                 </p>
               ) : null}
               {modalQr.pairingCode ? (
-                <p className="text-xs text-gray-700 break-all">
+                <p className="text-xs text-foreground break-all">
                   Pairing code: <code className="break-all">{modalQr.pairingCode}</code>
                 </p>
               ) : null}
             </div>
           ) : (
-            <p className="text-sm text-gray-500">Gerando QRCode...</p>
+            <p className="text-sm text-muted-foreground">Gerando QRCode...</p>
           )}
 
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Assim que a conexao for concluida, esta janela sera atualizada automaticamente.
           </p>
         </div>
@@ -631,7 +631,7 @@ export const InstanciasPage = () => {
 
     if (modalStage === "connected") {
       return (
-        <div className="space-y-3 text-sm text-gray-600">
+        <div className="space-y-3 text-sm text-subtle">
           <p className="font-medium text-green-600">Instancia conectada com sucesso.</p>
           <p>Voce ja pode fechar esta janela e usar a instancia nas suas automacoes.</p>
         </div>
@@ -639,7 +639,7 @@ export const InstanciasPage = () => {
     }
 
     return (
-      <div className="space-y-3 text-sm text-gray-600">
+      <div className="space-y-3 text-sm text-subtle">
         <p className="font-medium text-red-600">Nao foi possivel concluir a conexao.</p>
         <p>{modalError ?? "Tente novamente em instantes."}</p>
       </div>
@@ -719,7 +719,7 @@ export const InstanciasPage = () => {
             Nova instancia
           </Button>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-gray-600">
+        <CardContent className="space-y-2 text-sm text-subtle">
           <p>
             Cadastre uma instancia para gerar o QRCode e conectar o WhatsApp. Apos a conexao, voce pode
             sincronizar o webhook, verificar o status e remover o vinculo quando necessario.
@@ -740,9 +740,9 @@ export const InstanciasPage = () => {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-gray-500">Carregando instancias...</p>
+            <p className="text-sm text-muted-foreground">Carregando instancias...</p>
           ) : listaInstancias.length === 0 ? (
-            <p className="text-sm text-gray-500">Nenhuma instancia cadastrada ate o momento.</p>
+            <p className="text-sm text-muted-foreground">Nenhuma instancia cadastrada ate o momento.</p>
           ) : (
             <div className="grid gap-4">
               {listaInstancias.map((instancia) => {
@@ -760,18 +760,18 @@ export const InstanciasPage = () => {
                 );
 
                 return (
-                  <div key={instancia.iwh_id} className="rounded-lg border border-border bg-white p-4 shadow-sm">
+                  <div key={instancia.iwh_id} className="rounded-lg border border-border bg-surface p-4 shadow-sm">
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <div className="space-y-1">
-                        <p className="text-sm font-semibold text-gray-800">{instancia.iwh_nome}</p>
+                        <p className="text-sm font-semibold text-foreground">{instancia.iwh_nome}</p>
                         {phoneDisplay ? (
-                          <p className="text-xs text-gray-500">Telefone: {phoneDisplay}</p>
+                          <p className="text-xs text-muted-foreground">Telefone: {phoneDisplay}</p>
                         ) : null}
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           Webhook token: {instancia.iwh_webhook_token ?? "---"}
                         </p>
                         {evolution?.instance_name ? (
-                          <p className="text-xs text-gray-500">Evolution: {evolution.instance_name}</p>
+                          <p className="text-xs text-muted-foreground">Evolution: {evolution.instance_name}</p>
                         ) : null}
                         {evolution?.missing_at ? (
                           <p className="text-xs text-red-600">
@@ -836,21 +836,21 @@ export const InstanciasPage = () => {
                           <img
                             src={qrImageSrc}
                             alt="QRCode Evolution"
-                            className="h-40 w-40 rounded border border-gray-200"
+                            className="h-40 w-40 rounded border border-border"
                           />
                           {qr?.code ? (
-                            <p className="text-xs text-gray-700 break-all">
+                            <p className="text-xs text-foreground break-all">
                               Codigo: <code className="break-all">{qr.code}</code>
                             </p>
                           ) : null}
                           {qr?.pairingCode ? (
-                            <p className="text-xs text-gray-700 break-all">
+                            <p className="text-xs text-foreground break-all">
                               Pairing code: <code className="break-all">{qr.pairingCode}</code>
                             </p>
                           ) : null}
                         </div>
                       ) : (
-                        <p className="text-xs text-gray-500">Nenhum QRCode gerado ainda.</p>
+                        <p className="text-xs text-muted-foreground">Nenhum QRCode gerado ainda.</p>
                       )}
                       {info ? (
                         <p

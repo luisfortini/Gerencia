@@ -18,14 +18,26 @@ const config: Config = {
       },
       colors: {
         primary: {
-          DEFAULT: '#2563EB',
-          foreground: '#FFFFFF',
+          DEFAULT: 'rgb(var(--color-primary) / <alpha-value>)',
+          foreground: 'rgb(var(--color-primary-foreground) / <alpha-value>)',
         },
+        accent: {
+          DEFAULT: 'rgb(var(--color-accent) / <alpha-value>)',
+          foreground: 'rgb(var(--color-foreground) / <alpha-value>)',
+        },
+        background: 'rgb(var(--color-background) / <alpha-value>)',
+        surface: {
+          DEFAULT: 'rgb(var(--color-surface) / <alpha-value>)',
+          foreground: 'rgb(var(--color-foreground) / <alpha-value>)',
+        },
+        foreground: 'rgb(var(--color-foreground) / <alpha-value>)',
+        subtle: 'rgb(var(--color-subtle-foreground) / <alpha-value>)',
         muted: {
-          DEFAULT: '#F5F5F5',
-          foreground: '#6B7280',
+          DEFAULT: 'rgb(var(--color-muted) / <alpha-value>)',
+          foreground: 'rgb(var(--color-muted-foreground) / <alpha-value>)',
         },
-        border: '#E5E7EB',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
+        focus: 'rgb(var(--color-focus-ring) / <alpha-value>)',
       },
     },
   },

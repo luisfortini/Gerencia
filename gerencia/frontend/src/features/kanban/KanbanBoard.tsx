@@ -162,7 +162,7 @@ export const KanbanBoard = ({ columns, onChangeStatus, onOpenLead }: KanbanBoard
           </>
         }
       >
-        <label className="text-sm font-medium text-gray-700">Valor total (R$)</label>
+        <label className="text-sm font-medium text-foreground">Valor total (R$)</label>
         <Input value={valorTotal} onChange={(event) => setValorTotal(event.target.value)} placeholder="Ex: 1999.90" />
       </Modal>
     </>
@@ -183,20 +183,20 @@ const KanbanColumn = ({ status, leads, onMove, onOpenLead }: KanbanColumnProps) 
     <div
       ref={setNodeRef}
       className={
-        'flex h-full min-h-[420px] flex-col rounded-xl border border-border bg-white p-4 transition' +
+        'flex h-full min-h-[420px] flex-col rounded-xl border border-border bg-surface p-4 transition' +
         (isOver ? ' ring-2 ring-primary ring-offset-2' : '')
       }
     >
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-700">{statusTitles[status]}</h2>
-        <span className="text-xs text-gray-400">{leads.length}</span>
+        <h2 className="text-sm font-semibold text-foreground">{statusTitles[status]}</h2>
+        <span className="text-xs text-muted-foreground">{leads.length}</span>
       </div>
       <div className="flex flex-1 flex-col gap-3">
         {leads.map((lead) => (
           <KanbanCard key={lead.led_id} lead={lead} status={status} onMove={onMove} onOpenLead={onOpenLead} />
         ))}
         {leads.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-gray-400">
+          <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
             Arraste leads para esta etapa
           </div>
         ) : null}
@@ -238,16 +238,16 @@ const KanbanCard = ({ lead, status, onMove, onOpenLead }: KanbanCardProps) => {
     <div
       ref={setNodeRef}
       style={style}
-      className="cursor-grab rounded-lg border border-border bg-white p-3 shadow-sm"
+      className="cursor-grab rounded-lg border border-border bg-surface p-3 shadow-sm"
       {...listeners}
       {...attributes}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900">{lead.led_nome}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{lead.led_nome}</h3>
         <StatusBadge status={status} />
       </div>
-      <p className="mt-2 text-xs text-gray-500">Confianca IA: {Math.round((lead.led_status_conf ?? 0) * 100)}%</p>
-      <p className="mt-1 text-xs text-gray-500">Valor negociado: {valorNegociado ?? 'Nao informado'}</p>
+      <p className="mt-2 text-xs text-muted-foreground">Confianca IA: {Math.round((lead.led_status_conf ?? 0) * 100)}%</p>
+      <p className="mt-1 text-xs text-muted-foreground">Valor negociado: {valorNegociado ?? 'Nao informado'}</p>
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
         <Button
           size="sm"

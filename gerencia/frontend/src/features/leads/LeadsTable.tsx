@@ -35,20 +35,20 @@ export const LeadsTable = ({ leads, onOpenLead }: LeadsTableProps) => {
           return (
             <TableRow key={lead.led_id}>
               <TableCell>
-                <div className="font-medium text-gray-900">{lead.led_nome}</div>
-                <div className="text-xs text-gray-500">{lead.led_email ?? 'Sem e-mail'}</div>
+                <div className="font-medium text-foreground">{lead.led_nome}</div>
+                <div className="text-xs text-muted-foreground">{lead.led_email ?? 'Sem e-mail'}</div>
               </TableCell>
               <TableCell>
                 <StatusBadge status={lead.led_status} />
               </TableCell>
               <TableCell>
-                <span className="text-sm text-gray-700">{Math.round((lead.led_status_conf ?? 0) * 100)}%</span>
+                <span className="text-sm text-foreground">{Math.round((lead.led_status_conf ?? 0) * 100)}%</span>
               </TableCell>
               <TableCell>
-                <span className="text-sm text-gray-700">{valorFormatado}</span>
+                <span className="text-sm text-foreground">{valorFormatado}</span>
               </TableCell>
               <TableCell>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-subtle">
                   {lead.led_responsavel_usrid ? `Usuario #${lead.led_responsavel_usrid}` : 'Nao atribuido'}
                 </span>
               </TableCell>
