@@ -14,6 +14,8 @@ Route::post('auth/login', [AuthController::class, 'login']);
 Route::post('webhook/evolution', EvolutionWebhookController::class);
 
 Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
+    Route::put('auth/password', [AuthController::class, 'updatePassword']);
+
     Route::get('dashboard', DashboardController::class);
 
     Route::get('leads', [LeadController::class, 'index']);

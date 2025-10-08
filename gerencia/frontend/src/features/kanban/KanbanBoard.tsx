@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { MouseEvent, PointerEvent } from 'react';
 import {
   DndContext,
@@ -30,6 +30,34 @@ const statusOrder: LeadStatus[] = ['novo', 'qualificado', 'interessado', 'negoci
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
+const parseValorTotal = (raw: Lead['led_valor_total'] | null | undefined): number | null => {
+  if (raw === null || raw === undefined) {
+    return null;
+  }
+
+  if (typeof raw === 'number') {
+    return Number.isFinite(raw) ? raw : null;
+  }
+
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  let normalized = trimmed.replace(/[^\d.,-]/g, '');
+  if (!normalized) {
+    return null;
+  }
+  if (normalized.includes(',') && normalized.includes('.')) {
+    normalized = normalized.replace(/\./g, '').replace(',', '.');
+  } else {
+    normalized = normalized.replace(',', '.');
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+};
 
 interface KanbanBoardProps {
   columns: Record<LeadStatus, Lead[]>;
@@ -133,7 +161,7 @@ export const KanbanBoard = ({ columns, onChangeStatus, onOpenLead }: KanbanBoard
   return (
     <>
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="flex h-full gap-4 overflow-x-auto pb-2 pr-2">
           {statusOrder.map((status) => (
             <KanbanColumn
               key={status}
@@ -178,20 +206,36 @@ interface KanbanColumnProps {
 
 const KanbanColumn = ({ status, leads, onMove, onOpenLead }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: status });
+  const { total, hasValores } = useMemo(() => {
+    let soma = 0;
+    let possui = false;
+    for (const lead of leads) {
+      const valor = parseValorTotal(lead.led_valor_total);
+      if (valor !== null) {
+        soma += valor;
+        possui = true;
+      }
+    }
+    return { total: soma, hasValores: possui };
+  }, [leads]);
+  const totalFormatado = hasValores ? formatCurrency(total) : null;
 
   return (
     <div
       ref={setNodeRef}
       className={
-        'flex h-full min-h-[420px] flex-col rounded-xl border border-border bg-surface p-4 transition' +
+        'flex h-full min-h-[420px] w-[300px] flex-shrink-0 flex-col rounded-xl border border-border bg-surface p-4 transition' +
         (isOver ? ' ring-2 ring-primary ring-offset-2' : '')
       }
     >
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">{statusTitles[status]}</h2>
-        <span className="text-xs text-muted-foreground">{leads.length}</span>
+      <div className="mb-3 flex items-start justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">{statusTitles[status]}</h2>
+          <p className="text-xs text-muted-foreground">Total: {totalFormatado ?? '--'}</p>
+        </div>
+        <span className="text-xs font-medium text-muted-foreground">{leads.length}</span>
       </div>
-      <div className="flex flex-1 flex-col gap-3">
+      <div className="scrollbar-thin flex flex-1 flex-col gap-3 overflow-y-auto pr-1">
         {leads.map((lead) => (
           <KanbanCard key={lead.led_id} lead={lead} status={status} onMove={onMove} onOpenLead={onOpenLead} />
         ))}
@@ -226,9 +270,8 @@ const KanbanCard = ({ lead, status, onMove, onOpenLead }: KanbanCardProps) => {
     [transform, isDragging]
   );
 
-  const rawValor = lead.led_valor_total as number | string | null | undefined;
-  const valorNumerico = rawValor !== null && rawValor !== undefined ? Number(rawValor) : null;
-  const valorNegociado = valorNumerico !== null && Number.isFinite(valorNumerico) ? formatCurrency(valorNumerico) : null;
+  const valorNumerico = parseValorTotal(lead.led_valor_total);
+  const valorNegociado = valorNumerico !== null ? formatCurrency(valorNumerico) : null;
 
   const stopPropagation = (event: PointerEvent | MouseEvent) => {
     event.stopPropagation();
