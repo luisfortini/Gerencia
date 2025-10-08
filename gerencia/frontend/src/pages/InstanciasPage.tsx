@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -233,9 +233,35 @@ export const InstanciasPage = () => {
   const [modalStage, setModalStage] = useState<ModalStage>("form");
   const [modalInstance, setModalInstance] = useState<InstanciaWhatsapp | null>(null);
   const [modalQr, setModalQr] = useState<EvolutionQrCode | undefined>(undefined);
+  const { isSuperAdmin, isAdmin } = useMemo(() => {
+    if (typeof window === "undefined") {
+      return { isSuperAdmin: false, isAdmin: false } as const;
+    }
+
+    const raw = localStorage.getItem("gerencia_usuario");
+    if (!raw) {
+      return { isSuperAdmin: false, isAdmin: false } as const;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as { superadmin?: boolean; admin?: boolean } | null;
+      const superFlag = parsed?.superadmin === true;
+      return { isSuperAdmin: superFlag, isAdmin: superFlag || parsed?.admin === true } as const;
+    } catch (error) {
+      console.warn("Nao foi possivel interpretar os dados do usuario salvos localmente.", error);
+      return { isSuperAdmin: false, isAdmin: false } as const;
+    }
+  }, []);
+
+  const canManageInstancias = isSuperAdmin || isAdmin;
   const [modalError, setModalError] = useState<string | null>(null);
 
   const openModal = () => {
+    if (!canManageInstancias) {
+      window.alert("Somente administradores podem cadastrar instancias.");
+      return;
+    }
+
     setIsModalOpen(true);
     setModalStage("form");
     setModalInstance(null);
@@ -273,6 +299,11 @@ export const InstanciasPage = () => {
     instancia: InstanciaWhatsapp,
     options: { updateModal?: boolean } = {},
   ) => {
+    if (!canManageInstancias) {
+      window.alert("Somente administradores podem executar esta acao.");
+      return;
+    }
+
     const { updateModal = false } = options;
 
     setConnectingId(instancia.iwh_id);
@@ -335,6 +366,11 @@ export const InstanciasPage = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    if (!canManageInstancias) {
+      window.alert("Somente administradores podem cadastrar instancias.");
+      return;
+    }
+
     if (isCreatePending) {
       return;
     }
@@ -367,6 +403,11 @@ export const InstanciasPage = () => {
   };
 
   const handleSyncWebhook = async (instancia: InstanciaWhatsapp) => {
+    if (!canManageInstancias) {
+      window.alert("Somente administradores podem executar esta acao.");
+      return;
+    }
+
     setSyncingId(instancia.iwh_id);
     setFeedback((prev) => ({ ...prev, [instancia.iwh_id]: undefined }));
 
@@ -388,6 +429,11 @@ export const InstanciasPage = () => {
   };
 
   const handleRefreshStatus = async (instancia: InstanciaWhatsapp) => {
+    if (!canManageInstancias) {
+      window.alert("Somente administradores podem executar esta acao.");
+      return;
+    }
+
     setRefreshingId(instancia.iwh_id);
     setFeedback((prev) => ({ ...prev, [instancia.iwh_id]: undefined }));
 
@@ -409,6 +455,11 @@ export const InstanciasPage = () => {
   };
 
   const handleDeleteInstancia = async (instancia: InstanciaWhatsapp) => {
+    if (!canManageInstancias) {
+      window.alert("Somente administradores podem executar esta acao.");
+      return;
+    }
+
     const confirmed = window.confirm(
       `Excluir a instancia "${instancia.iwh_nome}"? Essa acao remove o vinculo local e nao pode ser desfeita.`,
     );
@@ -714,7 +765,11 @@ export const InstanciasPage = () => {
             <CardTitle>Instancias Evolution</CardTitle>
             <CardDescription>Gerencie as conexoes do WhatsApp integradas ao Evolution API.</CardDescription>
           </div>
-          <Button onClick={openModal} disabled={isLimitReached}>
+          <Button
+            onClick={openModal}
+            disabled={isLimitReached || !canManageInstancias}
+            title={!canManageInstancias ? "Somente administradores podem cadastrar instancias." : undefined}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Nova instancia
           </Button>
@@ -787,7 +842,8 @@ export const InstanciasPage = () => {
                         type="button"
                         size="sm"
                         onClick={() => fetchAndApplyQr(instancia)}
-                        disabled={connectingId === instancia.iwh_id || isConnectPending}
+                        disabled={connectingId === instancia.iwh_id || isConnectPending || !canManageInstancias}
+                        title={!canManageInstancias ? "Somente administradores podem executar esta acao." : undefined}
                       >
                         {connectingId === instancia.iwh_id ? (
                           <>
@@ -804,7 +860,8 @@ export const InstanciasPage = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleSyncWebhook(instancia)}
-                        disabled={syncingId === instancia.iwh_id || isSyncPending}
+                        disabled={syncingId === instancia.iwh_id || isSyncPending || !canManageInstancias}
+                        title={!canManageInstancias ? "Somente administradores podem executar esta acao." : undefined}
                       >
                         {syncingId === instancia.iwh_id ? "Sincronizando..." : "Sincronizar webhook"}
                       </Button>
@@ -814,7 +871,8 @@ export const InstanciasPage = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleRefreshStatus(instancia)}
-                        disabled={refreshingId === instancia.iwh_id || isRefreshPending}
+                        disabled={refreshingId === instancia.iwh_id || isRefreshPending || !canManageInstancias}
+                        title={!canManageInstancias ? "Somente administradores podem executar esta acao." : undefined}
                       >
                         {refreshingId === instancia.iwh_id ? "Verificando..." : "Verificar status"}
                       </Button>
@@ -824,7 +882,8 @@ export const InstanciasPage = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteInstancia(instancia)}
-                        disabled={deletingId === instancia.iwh_id || isDeletePending}
+                        disabled={deletingId === instancia.iwh_id || isDeletePending || !canManageInstancias}
+                        title={!canManageInstancias ? "Somente administradores podem executar esta acao." : undefined}
                       >
                         {deletingId === instancia.iwh_id ? "Excluindo..." : "Excluir"}
                       </Button>

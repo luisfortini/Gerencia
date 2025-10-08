@@ -23,6 +23,7 @@ class Usuario extends Authenticatable
         'usr_senha',
         'usr_papel',
         'usr_superadmin',
+        'usr_admin',
         'usr_ativo'
     ];
 
@@ -33,6 +34,7 @@ class Usuario extends Authenticatable
 
     protected $casts = [
         'usr_superadmin' => 'boolean',
+        'usr_admin' => 'boolean',
         'usr_ativo' => 'boolean'
     ];
 

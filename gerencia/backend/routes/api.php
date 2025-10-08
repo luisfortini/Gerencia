@@ -26,13 +26,15 @@ Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
     Route::post('kanban/{lead}/move', [KanbanController::class, 'move']);
 
     Route::get('instancias', [InstanciaWhatsappController::class, 'index']);
-    Route::post('instancias', [InstanciaWhatsappController::class, 'store']);
-    Route::put('instancias/{instancia}', [InstanciaWhatsappController::class, 'update']);
-    Route::delete('instancias/{instancia}', [InstanciaWhatsappController::class, 'destroy']);
-    Route::post('instancias/{instancia}/connect', [InstanciaWhatsappController::class, 'connect']);
-    Route::post('instancias/{instancia}/webhook/sync', [InstanciaWhatsappController::class, 'syncWebhook']);
-    Route::post('instancias/{instancia}/refresh', [InstanciaWhatsappController::class, 'refresh']);
-    Route::post('instancias/{instancia}/test', [InstanciaWhatsappController::class, 'testConnection']);
+    Route::middleware('admin')->group(function () {
+        Route::post('instancias', [InstanciaWhatsappController::class, 'store']);
+        Route::put('instancias/{instancia}', [InstanciaWhatsappController::class, 'update']);
+        Route::delete('instancias/{instancia}', [InstanciaWhatsappController::class, 'destroy']);
+        Route::post('instancias/{instancia}/connect', [InstanciaWhatsappController::class, 'connect']);
+        Route::post('instancias/{instancia}/webhook/sync', [InstanciaWhatsappController::class, 'syncWebhook']);
+        Route::post('instancias/{instancia}/refresh', [InstanciaWhatsappController::class, 'refresh']);
+        Route::post('instancias/{instancia}/test', [InstanciaWhatsappController::class, 'testConnection']);
+    });
 
     Route::get('objecoes', [ObjecaoController::class, 'index']);
     Route::post('objecoes', [ObjecaoController::class, 'store']);

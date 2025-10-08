@@ -1,12 +1,36 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminContas, useAdminOverview, useEvolutionConfig, useUpdateEvolutionConfig } from "@/hooks/useAdmin";
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Navigate } from "react-router-dom";
 
 export const AdminGlobalPage = () => {
+  const isSuperAdmin = useMemo(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    const raw = localStorage.getItem("gerencia_usuario");
+    if (!raw) {
+      return false;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as { superadmin?: boolean; admin?: boolean } | null;
+      return parsed?.superadmin === true;
+    } catch (error) {
+      console.warn("Nao foi possivel interpretar os dados do usuario.", error);
+      return false;
+    }
+  }, []);
+
+  if (!isSuperAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   const { data: overview } = useAdminOverview();
   const { data: contas } = useAdminContas();
   const evolutionConfig = useEvolutionConfig();

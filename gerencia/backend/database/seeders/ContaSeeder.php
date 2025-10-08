@@ -23,6 +23,7 @@ class ContaSeeder extends Seeder
                 'usr_senha' => Hash::make('password'),
                 'usr_papel' => 'superadmin',
                 'usr_superadmin' => true,
+                'usr_admin' => true,
                 'usr_ativo' => true,
             ]
         );
@@ -46,6 +47,7 @@ class ContaSeeder extends Seeder
                 'usr_senha' => Hash::make('password'),
                 'usr_papel' => 'gestor',
                 'usr_superadmin' => false,
+                'usr_admin' => true,
                 'usr_ativo' => true,
             ]
         );
@@ -58,6 +60,7 @@ class ContaSeeder extends Seeder
                 'usr_senha' => Hash::make('password'),
                 'usr_papel' => 'operador',
                 'usr_superadmin' => false,
+                'usr_admin' => false,
                 'usr_ativo' => true,
             ]
         );

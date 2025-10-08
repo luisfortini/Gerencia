@@ -38,6 +38,7 @@ class AuthController extends Controller
                 'nome' => $usuario->usr_nome,
                 'papel' => $usuario->usr_papel,
                 'superadmin' => $usuario->usr_superadmin,
+                'admin' => $usuario->usr_superadmin || $usuario->usr_admin,
                 'conta_id' => $usuario->usr_ctaid,
             ],
         ]);
@@ -72,6 +73,14 @@ class AuthController extends Controller
             'message' => 'Senha atualizada com sucesso.',
             'token' => $tokenInstance->plainTextToken,
             'token_expires_at' => optional($tokenInstance->accessToken->expires_at)->toIso8601String(),
+            'usuario' => [
+                'id' => $usuario->usr_id,
+                'nome' => $usuario->usr_nome,
+                'papel' => $usuario->usr_papel,
+                'superadmin' => $usuario->usr_superadmin,
+                'admin' => $usuario->usr_superadmin || $usuario->usr_admin,
+                'conta_id' => $usuario->usr_ctaid,
+            ],
         ]);
     }
 }

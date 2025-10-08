@@ -1,4 +1,4 @@
-﻿import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bot, ChevronDown, ChevronLeft, ChevronRight, KeyRound, LayoutDashboard, LogOut, MessageSquare, Settings, Users } from 'lucide-react';
 import axios from 'axios';
@@ -11,14 +11,14 @@ import { Modal } from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 
-type StoredUsuario = { nome?: string; papel?: string; superadmin?: boolean } | null;
+type StoredUsuario = { nome?: string; papel?: string; superadmin?: boolean; admin?: boolean } | null;
 
 const links = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/leads/lista', label: 'Leads - Lista', icon: MessageSquare },
   { to: '/leads/kanban', label: 'Leads - Kanban', icon: Bot },
-  { to: '/instancias', label: 'Instancias WhatsApp', icon: Settings },
-  { to: '/admin', label: 'Admin Global', icon: Users },
+  { to: '/instancias', label: 'Instancias WhatsApp', icon: Settings, requiresAdmin: true },
+  { to: '/admin', label: 'Admin Global', icon: Users, requiresSuperAdmin: true },
 ];
 
 const INVALID_CONTA_VALUES = new Set(['', 'null', 'undefined']);
@@ -68,7 +68,28 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   const userName = usuario?.nome ?? 'Usuario';
   const userRole = usuario?.papel ? usuario.papel.replace(/_/g, ' ') : null;
   const userInitials = getUserInitials(userName || 'G');
-  const tenantLabel = hasConta ? `Conta #${contaValue}` : usuario?.superadmin ? 'Super admin' : 'Conta nao identificada';
+  const isSuperAdmin = usuario?.superadmin === true;
+  const isAdmin = isSuperAdmin || usuario?.admin === true;
+  const tenantLabel = hasConta
+    ? `Conta #${contaValue}`
+    : isSuperAdmin
+      ? 'Super admin'
+      : isAdmin
+        ? 'Admin'
+        : 'Conta nao identificada';
+  const availableLinks = useMemo(
+    () =>
+      links.filter((link) => {
+        if (link.requiresSuperAdmin && !isSuperAdmin) {
+          return false;
+        }
+        if (link.requiresAdmin && !isAdmin) {
+          return false;
+        }
+        return true;
+      }),
+    [isAdmin, isSuperAdmin]
+  );
 
   const handleLogout = () => {
     localStorage.removeItem('gerencia_token');
@@ -104,6 +125,11 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
       if (novoToken) {
         localStorage.setItem('gerencia_token', novoToken);
         api.defaults.headers.common.Authorization = `Bearer ${novoToken}`;
+      }
+
+      const usuarioAtualizado = response.data?.usuario as StoredUsuario;
+      if (usuarioAtualizado) {
+        localStorage.setItem('gerencia_usuario', JSON.stringify(usuarioAtualizado));
       }
 
       window.alert('Senha atualizada com sucesso.');
@@ -184,7 +210,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
           {!isSidebarCollapsed ? <ThemeToggle /> : null}
         </div>
         <nav className="flex flex-1 flex-col gap-1">
-          {links.map((link) => {
+          {availableLinks.map((link) => {
             const Icon = link.icon;
             const active = location.pathname.startsWith(link.to);
             return (
