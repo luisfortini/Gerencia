@@ -96,7 +96,7 @@ const STATUS_STYLES: Record<string, { badge: string; dot: string }> = {
   Negociacao: { badge: 'bg-violet-100 text-violet-800', dot: 'bg-violet-500' },
   Ganho: { badge: 'bg-emerald-100 text-emerald-800', dot: 'bg-emerald-500' },
   Perdido: { badge: 'bg-rose-100 text-rose-800', dot: 'bg-rose-500' },
-  'Follow-up Futuro': { badge: 'bg-gray-100 text-gray-800', dot: 'bg-gray-500' },
+  'Follow-up Futuro': { badge: 'bg-muted/60 text-foreground', dot: 'bg-accent' },
 };
 
 const WHATSAPP_OPTIONS: Array<{ value: DashboardWhatsapp; label: string }> = [
@@ -137,7 +137,7 @@ const formatCurrency = (value: number) =>
 
 const getStatusStyles = (status: string) =>
   STATUS_STYLES[status] ?? {
-    badge: 'bg-slate-100 text-slate-700',
+    badge: 'bg-slate-100 text-foreground',
     dot: 'bg-slate-400',
   };
 
@@ -211,18 +211,18 @@ const DashboardGestor = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Visao Geral — GerencIA</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-2xl font-semibold text-foreground">Visao Geral — GerencIA</h1>
+          <p className="text-sm text-muted-foreground">
             Panorama consolidado da performance comercial com dados assistidos por IA.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Info className="h-5 w-5 text-slate-400" />
-          <span className="text-xs text-slate-500">Dados atualizados direto do endpoint /api/dashboard.</span>
+          <Info className="h-5 w-5 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground">Dados atualizados direto do endpoint /api/dashboard.</span>
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-border bg-white p-4 shadow-sm md:grid-cols-[repeat(4,minmax(0,1fr))]">
+      <div className="grid gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm md:grid-cols-[repeat(4,minmax(0,1fr))]">
         <Select value={period} onChange={(event) => setPeriod(event.target.value as DashboardPeriod)}>
           {PERIOD_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -238,7 +238,7 @@ const DashboardGestor = () => {
           ))}
         </Select>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -288,19 +288,19 @@ const DashboardGestor = () => {
               return (
                 <Card key={item.label}>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                    <span className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                    <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                       <Icon className="h-4 w-4 text-primary" />
                       {item.label}
                     </span>
-                    <TrendIcon className="h-4 w-4 text-slate-400" />
+                    <TrendIcon className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    <p className="text-3xl font-semibold text-slate-900">
+                    <p className="text-3xl font-semibold text-foreground">
                       {item.isCurrency
                         ? formatCurrency(item.value)
                         : formatNumber(item.value ?? 0)}
                     </p>
-                    <p className="text-xs text-slate-500">{item.hint}</p>
+                    <p className="text-xs text-muted-foreground">{item.hint}</p>
                   </CardContent>
                 </Card>
               );
@@ -334,7 +334,7 @@ const DashboardGestor = () => {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Visualize o ritmo diario de novos contatos e o desfecho de cada negociacao.
             </p>
           </CardContent>
@@ -348,12 +348,12 @@ const DashboardGestor = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-4xl font-semibold text-slate-900">
+              <p className="text-4xl font-semibold text-foreground">
                 {data?.kpis.tempoMedioPrimeiraRespostaMin !== undefined && data?.kpis.tempoMedioPrimeiraRespostaMin !== null
                   ? `${data.kpis.tempoMedioPrimeiraRespostaMin} min`
                   : '--'}
               </p>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 Meta: {data ? `${data.metas.metaPrimeiraRespostaMin} min` : '--'}
               </p>
             </div>
@@ -373,7 +373,7 @@ const DashboardGestor = () => {
                 }}
               />
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Acompanhe o tempo de resposta desde o primeiro contato ate a primeira interacao do time.
             </p>
           </CardContent>
@@ -398,7 +398,7 @@ const DashboardGestor = () => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <p className="text-xs text-slate-500">Utilize para identificar gargalos entre cada etapa do funil.</p>
+            <p className="text-xs text-muted-foreground">Utilize para identificar gargalos entre cada etapa do funil.</p>
           </CardContent>
         </Card>
         <Card>
@@ -413,18 +413,18 @@ const DashboardGestor = () => {
                 return (
                   <div
                     key={item.status}
-                    className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2"
                   >
                     <div className="flex items-center gap-3">
                       <span className={`h-2 w-2 rounded-full ${styles.dot}`} />
-                      <span className="text-sm font-medium text-slate-700">{item.status}</span>
+                      <span className="text-sm font-medium text-foreground">{item.status}</span>
                     </div>
                     <Badge className={styles.badge}>{formatNumber(item.count)}</Badge>
                   </div>
                 );
               })}
             </div>
-            <p className="text-xs text-slate-500">Status definidos automaticamente pela IA ou pelo time comercial.</p>
+            <p className="text-xs text-muted-foreground">Status definidos automaticamente pela IA ou pelo time comercial.</p>
           </CardContent>
         </Card>
         <Card>
@@ -451,7 +451,7 @@ const DashboardGestor = () => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <p className="text-xs text-slate-500">Oriente campanhas de follow-up focando nas objecoes frequentes.</p>
+            <p className="text-xs text-muted-foreground">Oriente campanhas de follow-up focando nas objecoes frequentes.</p>
           </CardContent>
         </Card>
       </div>
@@ -480,12 +480,12 @@ const DashboardGestor = () => {
                 const styles = getStatusStyles(alerta.status);
                 return (
                   <TableRow key={alerta.id}>
-                    <TableCell className="font-medium text-slate-900">{alerta.lead}</TableCell>
+                    <TableCell className="font-medium text-foreground">{alerta.lead}</TableCell>
                     <TableCell>{alerta.telefone}</TableCell>
                     <TableCell>
                       <Badge className={styles.badge}>{alerta.status}</Badge>
                     </TableCell>
-                    <TableCell className="flex items-center gap-2 text-sm text-slate-700">
+                    <TableCell className="flex items-center gap-2 text-sm text-foreground">
                       <AlertCircle className="h-4 w-4 text-amber-500" />
                       {alerta.motivo}
                     </TableCell>
@@ -505,20 +505,20 @@ const DashboardGestor = () => {
               })}
               {data && data.alertas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-sm text-slate-500">
+                  <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
                     Nenhum alerta de funil no periodo selecionado.
                   </TableCell>
                 </TableRow>
               ) : null}
             </TableBody>
           </Table>
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-3 text-xs text-muted-foreground">
             Atue nos alertas para garantir que nenhum lead extrapole os limites de SLA combinados.
           </p>
         </CardContent>
       </Card>
 
-      <footer className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-center text-xs text-slate-400">
+      <footer className="rounded-xl border border-dashed border-border bg-surface p-4 text-center text-xs text-muted-foreground">
         Dados provenientes do endpoint /api/dashboard. Ajuste filtros para refinar as metricas.
       </footer>
     </div>

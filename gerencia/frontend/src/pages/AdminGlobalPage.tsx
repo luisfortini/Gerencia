@@ -86,7 +86,7 @@ export const AdminGlobalPage = () => {
         <CardContent>
           <form onSubmit={handleEvolutionSubmit} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-gray-600">URL base</label>
+              <label className="text-xs font-medium text-subtle">URL base</label>
               <Input
                 required
                 type="url"
@@ -95,12 +95,12 @@ export const AdminGlobalPage = () => {
                 placeholder="https://evolutionapi.seudominio.com"
               />
               {evolutionConfig.data?.default_base_url && (
-                <p className="text-xs text-gray-500">Padrão sugerido: {evolutionConfig.data.default_base_url}</p>
+                <p className="text-xs text-muted-foreground">Padrão sugerido: {evolutionConfig.data.default_base_url}</p>
               )}
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-gray-600">API key</label>
+              <label className="text-xs font-medium text-subtle">API key</label>
               <div className="flex flex-wrap items-center gap-2">
                 <Input
                   type={showApiKey ? "text" : "password"}
@@ -116,7 +116,7 @@ export const AdminGlobalPage = () => {
                   Remover
                 </Button>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 A chave é compartilhada com todas as instâncias. Ela será injetada automaticamente quando um cliente criar uma
                 nova conexão.
               </p>
@@ -128,9 +128,9 @@ export const AdminGlobalPage = () => {
                 type="checkbox"
                 checked={verifySsl}
                 onChange={(event) => setVerifySsl(event.target.checked)}
-                className="h-4 w-4 rounded border border-gray-300"
+                className="h-4 w-4 rounded border border-border"
               />
-              <label htmlFor="verify-ssl" className="text-sm text-gray-700">
+              <label htmlFor="verify-ssl" className="text-sm text-foreground">
                 Verificar certificado SSL nas chamadas para a Evolution
               </label>
             </div>
@@ -191,8 +191,8 @@ export const AdminGlobalPage = () => {
               {contas?.map((conta) => (
                 <TableRow key={conta.cta_id}>
                   <TableCell>
-                    <div className="font-medium text-gray-800">{conta.cta_nome}</div>
-                    <div className="text-xs text-gray-500">slug: {conta.cta_slug}</div>
+                    <div className="font-medium text-foreground">{conta.cta_nome}</div>
+                    <div className="text-xs text-muted-foreground">slug: {conta.cta_slug}</div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={conta.cta_plano_tipo === "anual" ? "success" : "outline"}>
@@ -205,7 +205,7 @@ export const AdminGlobalPage = () => {
                 </TableRow>
               )) ?? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-sm text-gray-500">
+                  <TableCell colSpan={5} className="text-center text-sm text-muted-foreground">
                     Nenhuma conta cadastrada.
                   </TableCell>
                 </TableRow>
@@ -219,8 +219,8 @@ export const AdminGlobalPage = () => {
 };
 
 const ResumoItem = ({ titulo, valor }: { titulo: string; valor: number }) => (
-  <div className="rounded-lg border border-border bg-white p-4">
-    <p className="text-xs uppercase tracking-wide text-gray-500">{titulo}</p>
-    <p className="mt-1 text-2xl font-semibold text-gray-900">{valor}</p>
+  <div className="rounded-lg border border-border bg-surface p-4">
+    <p className="text-xs uppercase tracking-wide text-muted-foreground">{titulo}</p>
+    <p className="mt-1 text-2xl font-semibold text-foreground">{valor}</p>
   </div>
 );

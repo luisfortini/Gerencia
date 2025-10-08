@@ -63,7 +63,7 @@ export const LeadsListPage = () => {
           {data?.data?.length ? (
             <LeadsTable leads={data.data} onOpenLead={(lead) => setSelectedLeadId(lead.led_id)} />
           ) : (
-            <p className="text-sm text-gray-500">Nenhum lead encontrado com os filtros atuais.</p>
+            <p className="text-sm text-muted-foreground">Nenhum lead encontrado com os filtros atuais.</p>
           )}
         </CardContent>
       </Card>

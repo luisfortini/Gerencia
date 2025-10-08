@@ -3,6 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { BarChart3, Bot, LayoutDashboard, LogOut, MessageSquare, Settings, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import logoFull from '@/assets/logo-full.svg';
+import logoMark from '@/assets/logo-mark.svg';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const links = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -60,14 +63,11 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <aside className="hidden w-64 flex-col border-r border-border bg-white p-6 md:flex">
-        <div className="mb-8 flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-lg font-bold text-white">IA</div>
-          <div>
-            <p className="text-lg font-semibold text-gray-900">GerencIA</p>
-            <span className="text-xs text-gray-500">CRM Assistido por IA</span>
-          </div>
+    <div className="flex min-h-screen bg-background text-foreground">
+      <aside className="hidden w-64 flex-col border-r border-border bg-surface p-6 shadow-sm md:flex">
+        <div className="mb-8 flex items-center justify-between">
+          <img src={logoFull} alt="GerencIA" className="h-12 w-auto" />
+          <ThemeToggle />
         </div>
         <nav className="flex flex-1 flex-col gap-1">
           {links.map((link) => {
@@ -79,7 +79,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
                 to={link.to}
                 className={cn(
                   'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition',
-                  active ? 'bg-primary text-white shadow' : 'text-gray-600 hover:bg-gray-100'
+                  active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-subtle hover:bg-muted/60 hover:text-foreground'
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -98,17 +98,21 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         </div>
       </aside>
       <div className="flex flex-1 flex-col">
-        <header className="flex flex-col gap-4 border-b border-border bg-white px-6 py-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Painel GerencIA</h1>
-            <p className="text-sm text-gray-500">Monitoramento em tempo real das conversas e status dos leads.</p>
+        <header className="flex flex-col gap-4 border-b border-border bg-surface px-4 py-4 shadow-sm transition md:flex-row md:items-center md:justify-between md:px-6">
+          <div className="flex items-center gap-3">
+            <img src={logoMark} alt="GerencIA símbolo" className="h-10 w-auto md:hidden" />
+            <div>
+              <h1 className="text-xl font-semibold text-foreground">Painel GerencIA</h1>
+              <p className="text-sm text-muted-foreground">Monitoramento em tempo real das conversas e status dos leads.</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <div className="text-right">
-              <p className="text-sm font-medium text-gray-800">{userName}</p>
-              <p className="text-xs text-gray-500">{userRole ?? tenantLabel}</p>
+              <p className="text-sm font-medium text-foreground">{userName}</p>
+              <p className="text-xs text-muted-foreground">{userRole ?? tenantLabel}</p>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold uppercase">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 font-semibold uppercase text-primary">
               {userInitials}
             </div>
             <Button variant="ghost" size="sm" onClick={handleLogout} className="md:hidden">
@@ -117,7 +121,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             </Button>
           </div>
         </header>
-        <main className="flex flex-1 min-h-0 flex-col overflow-hidden p-6">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

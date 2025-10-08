@@ -19,7 +19,7 @@ export const Tabs: React.FC<TabsProps> = ({ value, onValueChange, children }) =>
 );
 
 export const TabsList: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className, ...props }) => (
-  <div className={cn('flex rounded-lg border border-border bg-white p-1', className)} {...props} />
+  <div className={cn('flex rounded-lg border border-border bg-surface p-1', className)} {...props} />
 );
 
 interface TabsTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -35,7 +35,7 @@ export const TabsTrigger: React.FC<TabsTriggerProps> = ({ value, className, chil
       onClick={() => ctx.onChange(value)}
       className={cn(
         'flex-1 rounded-md px-4 py-2 text-sm font-medium transition',
-        isActive ? 'bg-primary text-white shadow' : 'text-gray-600 hover:bg-gray-100',
+        isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-subtle hover:bg-muted/60 hover:text-foreground',
         className
       )}
       {...props}
