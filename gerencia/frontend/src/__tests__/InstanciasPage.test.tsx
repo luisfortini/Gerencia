@@ -1,4 +1,4 @@
-Ôªøimport { render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { InstanciasPage } from '@/pages/InstanciasPage';
 
 const mutateAsync = jest.fn().mockResolvedValue(undefined);
@@ -16,14 +16,13 @@ jest.mock('@/hooks/useInstancias', () => ({
 }));
 
 describe('InstanciasPage', () => {
-  beforeEach(() => {
-    process.env.VITE_INSTANCIAS_LIMITE = '3';
-  });
+  beforeEach(() => {\n    process.env.VITE_INSTANCIAS_LIMITE = '3';\n    window.localStorage.setItem('gerencia_usuario', JSON.stringify({ admin: true }));\n  });
 
-  it('desabilita cria√ß√£o ao atingir limite', () => {
+  it('desabilita criaÁ„o ao atingir limite', () => {
     render(<InstanciasPage />);
 
-    const button = screen.getByRole('button', { name: /Limite de inst√¢ncias atingido/i });
+    const button = screen.getByRole('button', { name: /Limite de inst‚ncias atingido/i });
     expect(button).toBeDisabled();
   });
 });
+

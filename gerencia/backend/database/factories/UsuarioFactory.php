@@ -19,6 +19,7 @@ class UsuarioFactory extends Factory
             'usr_senha' => bcrypt('password'),
             'usr_papel' => 'operador',
             'usr_superadmin' => false,
+            'usr_admin' => false,
             'usr_ativo' => true,
         ];
     }

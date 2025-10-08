@@ -1,6 +1,7 @@
 <?php
 namespace App\Http;
 
+use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -44,5 +45,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'tenant' => ResolveTenant::class,
         'superadmin' => EnsureSuperAdmin::class,
+        'admin' => EnsureAdmin::class,
     ];
 }
