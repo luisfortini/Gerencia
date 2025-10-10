@@ -18,6 +18,7 @@ class Conta extends Model
         'cta_slug',
         'cta_plano_tipo',
         'cta_limite_instancias',
+        'cta_limite_usuarios',
         'cta_retencao_dias',
         'cta_status',
         'cta_observacoes'

@@ -9,7 +9,9 @@ class IaResponse
         public readonly float $statusConfidence,
         public readonly ?float $valorTotal,
         public readonly ?string $objecao,
-        public readonly array $detalhes
+        public readonly array $detalhes,
+        public readonly ?int $responsavelId = null,
+        public readonly ?string $responsavelNome = null
     ) {
     }
 
@@ -20,7 +22,13 @@ class IaResponse
             statusConfidence: (float) ($data['status_conf'] ?? 0.0),
             valorTotal: isset($data['valor_total']) ? (float) $data['valor_total'] : null,
             objecao: $data['objecao'] ?? null,
-            detalhes: $data['detalhes'] ?? []
+            detalhes: $data['detalhes'] ?? [],
+            responsavelId: isset($data['responsavel_id']) && is_numeric($data['responsavel_id'])
+                ? (int) $data['responsavel_id']
+                : null,
+            responsavelNome: isset($data['responsavel_nome']) && is_string($data['responsavel_nome'])
+                ? $data['responsavel_nome']
+                : null
         );
     }
 
@@ -32,6 +40,8 @@ class IaResponse
             'valor_total' => $this->valorTotal,
             'objecao' => $this->objecao,
             'detalhes' => $this->detalhes,
+            'responsavel_id' => $this->responsavelId,
+            'responsavel_nome' => $this->responsavelNome,
         ];
     }
 }

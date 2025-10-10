@@ -14,6 +14,13 @@ export interface LeadMessage {
   msg_recebido_em: string;
 }
 
+export interface LeadResponsavel {
+  usr_id: number;
+  usr_nome: string;
+  usr_email?: string | null;
+  usr_papel?: string | null;
+}
+
 export interface Lead {
   led_id: number;
   led_nome: string;
@@ -23,6 +30,7 @@ export interface Lead {
   led_status_conf: number;
   led_valor_total?: number | null;
   led_responsavel_usrid?: number | null;
+  responsavel?: LeadResponsavel | null;
   mensagens?: LeadMessage[];
 }
 
@@ -84,7 +92,14 @@ export interface ContaResumo {
   cta_id: number;
   cta_nome: string;
   cta_slug: string;
-  cta_plano_tipo: string;
+  cta_plano_tipo: 'mensal' | 'anual';
+  cta_limite_instancias: number;
+  cta_limite_usuarios: number;
+  cta_retencao_dias: number;
+  cta_status: 'ativo' | 'inativo';
+  cta_observacoes?: string | null;
+  created_at?: string;
+  updated_at?: string;
   usuarios_count: number;
   instancias_whatsapp_count: number;
   leads_count: number;
@@ -96,4 +111,30 @@ export interface EvolutionConfig {
   api_key?: string | null;
   verify_ssl: boolean;
   default_verify_ssl: boolean;
+}
+
+export interface Usuario {
+  usr_id: number;
+  usr_nome: string;
+  usr_email: string;
+  usr_papel: "gestor" | "operador";
+  usr_admin: boolean;
+  usr_ativo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UsuariosResponse {
+  usuarios: Usuario[];
+  limite: number;
+  total_ativos: number;
+  disponiveis: number | null;
+}
+
+export interface UsuarioOption {
+  id: number;
+  nome: string;
+  email?: string | null;
+  papel?: string | null;
+  admin: boolean;
 }

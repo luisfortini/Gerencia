@@ -6,6 +6,7 @@ use App\Models\AuditoriaIa;
 use App\Models\Mensagem;
 use App\Services\Ia\IaResponse;
 use App\Services\Ia\IaServiceFactory;
+use App\Services\LeadAssignmentService;
 use App\Services\LeadStatusService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -23,15 +24,22 @@ class ProcessIaJob implements ShouldQueue
     {
     }
 
-    public function handle(IaServiceFactory $factory, LeadStatusService $statusService): void
-    {
-        $mensagem = Mensagem::with('lead')->find($this->mensagemId);
+    public function handle(
+        IaServiceFactory $factory,
+        LeadStatusService $statusService,
+        LeadAssignmentService $assignmentService
+    ): void {
+        $mensagem = Mensagem::with([
+            'lead.conta',
+            'lead.instanciaWhatsapp',
+        ])->find($this->mensagemId);
 
         if (! $mensagem || ! $mensagem->lead) {
             return;
         }
 
         $lead = $mensagem->lead;
+        $conta = $lead->conta;
 
         $historico = $lead->mensagens()
             ->whereNotNull('msg_conteudo')
@@ -80,6 +88,25 @@ class ProcessIaJob implements ShouldQueue
             ];
         }
 
+        if ($conta) {
+            $usuariosDisponiveis = $conta->usuarios()
+                ->select('usr_id', 'usr_nome', 'usr_papel')
+                ->where('usr_ativo', true)
+                ->orderBy('usr_nome')
+                ->limit(50)
+                ->get()
+                ->map(fn ($usuario) => [
+                    'id' => $usuario->usr_id,
+                    'nome' => $usuario->usr_nome,
+                    'papel' => $usuario->usr_papel,
+                ])
+                ->toArray();
+
+            if (! empty($usuariosDisponiveis)) {
+                $payload['usuarios_disponiveis'] = $usuariosDisponiveis;
+            }
+        }
+
         $tieredService = $factory->make();
 
         try {
@@ -104,9 +131,15 @@ class ProcessIaJob implements ShouldQueue
                     $response->statusConfidence,
                     $response->valorTotal,
                     $response->objecao,
-                    $detalhes
+                    $detalhes,
+                    $response->responsavelId,
+                    $response->responsavelNome
                 )
             );
+
+            if ($conta && $response->responsavelId !== null) {
+                $assignmentService->assign($lead, $response->responsavelId, $conta, false, false);
+            }
         } catch (Throwable $exception) {
             AuditoriaIa::create([
                 'aia_ledid' => $lead->led_id,

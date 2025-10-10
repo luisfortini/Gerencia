@@ -32,6 +32,10 @@ export const LeadsTable = ({ leads, onOpenLead }: LeadsTableProps) => {
             ? formatCurrency(valorNumerico)
             : 'Nao informado';
 
+          const responsavelLabel =
+            lead.responsavel?.usr_nome ??
+            (lead.led_responsavel_usrid ? `Usuario #${lead.led_responsavel_usrid}` : 'Nao atribuido');
+
           return (
             <TableRow key={lead.led_id}>
               <TableCell>
@@ -48,9 +52,7 @@ export const LeadsTable = ({ leads, onOpenLead }: LeadsTableProps) => {
                 <span className="text-sm text-foreground">{valorFormatado}</span>
               </TableCell>
               <TableCell>
-                <span className="text-sm text-subtle">
-                  {lead.led_responsavel_usrid ? `Usuario #${lead.led_responsavel_usrid}` : 'Nao atribuido'}
-                </span>
+                <span className="text-sm text-subtle">{responsavelLabel}</span>
               </TableCell>
               <TableCell>
                 <Button variant="outline" size="sm" onClick={() => onOpenLead(lead)}>

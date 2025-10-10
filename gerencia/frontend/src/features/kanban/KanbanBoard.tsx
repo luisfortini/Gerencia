@@ -272,6 +272,9 @@ const KanbanCard = ({ lead, status, onMove, onOpenLead }: KanbanCardProps) => {
 
   const valorNumerico = parseValorTotal(lead.led_valor_total);
   const valorNegociado = valorNumerico !== null ? formatCurrency(valorNumerico) : null;
+  const responsavelLabel =
+    lead.responsavel?.usr_nome ??
+    (lead.led_responsavel_usrid ? `Usuario #${lead.led_responsavel_usrid}` : 'Nao atribuido');
 
   const stopPropagation = (event: PointerEvent | MouseEvent) => {
     event.stopPropagation();
@@ -291,6 +294,7 @@ const KanbanCard = ({ lead, status, onMove, onOpenLead }: KanbanCardProps) => {
       </div>
       <p className="mt-2 text-xs text-muted-foreground">Confianca IA: {Math.round((lead.led_status_conf ?? 0) * 100)}%</p>
       <p className="mt-1 text-xs text-muted-foreground">Valor negociado: {valorNegociado ?? 'Nao informado'}</p>
+      <p className="mt-1 text-xs text-muted-foreground">Responsavel: {responsavelLabel}</p>
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
         <Button
           size="sm"

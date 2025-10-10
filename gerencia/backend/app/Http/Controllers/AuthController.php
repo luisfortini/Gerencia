@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class AuthController extends Controller
 {
@@ -81,6 +85,84 @@ class AuthController extends Controller
                 'admin' => $usuario->usr_superadmin || $usuario->usr_admin,
                 'conta_id' => $usuario->usr_ctaid,
             ],
+        ]);
+    }
+
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $usuario = Usuario::where('usr_email', $data['email'])->first();
+
+        if (! $usuario) {
+            return response()->json([
+                'message' => 'Se o e-mail estiver cadastrado, enviaremos instrucoes para recuperar a senha em instantes.'
+            ]);
+        }
+
+        $token = Str::random(64);
+
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $usuario->usr_email],
+            [
+                'token' => Hash::make($token),
+                'created_at' => now(),
+            ]
+        );
+
+        Log::info('Token de redefinicao de senha gerado.', [
+            'email' => $usuario->usr_email,
+            'token' => $token,
+        ]);
+
+        return response()->json([
+            'message' => 'Se o e-mail estiver cadastrado, enviaremos instrucoes para recuperar a senha em instantes.'
+        ]);
+    }
+
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+            'token' => ['required', 'string'],
+            'senha' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $record = DB::table('password_reset_tokens')->where('email', $data['email'])->first();
+
+        if (! $record) {
+            return response()->json([
+                'message' => 'Token invalido ou expirado.',
+            ], 422);
+        }
+
+        $createdAt = $record->created_at ? Carbon::parse($record->created_at) : null;
+        $tokenExpirado = $createdAt === null || $createdAt->addMinutes(60)->isPast();
+
+        if ($tokenExpirado || ! Hash::check($data['token'], $record->token)) {
+            return response()->json([
+                'message' => 'Token invalido ou expirado.',
+            ], 422);
+        }
+
+        $usuario = Usuario::where('usr_email', $data['email'])->first();
+
+        if (! $usuario) {
+            return response()->json([
+                'message' => 'Usuario nao encontrado.',
+            ], 404);
+        }
+
+        $usuario->usr_senha = Hash::make($data['senha']);
+        $usuario->save();
+
+        $usuario->tokens()->delete();
+        DB::table('password_reset_tokens')->where('email', $data['email'])->delete();
+
+        return response()->json([
+            'message' => 'Senha redefinida com sucesso. Faça login com a nova senha.'
         ]);
     }
 }
