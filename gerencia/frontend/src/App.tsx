@@ -4,8 +4,11 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { LeadsListPage } from '@/pages/LeadsListPage';
 import { LeadsKanbanPage } from '@/pages/LeadsKanbanPage';
 import { InstanciasPage } from '@/pages/InstanciasPage';
+import { UsuariosPage } from '@/pages/UsuariosPage';
 import { AdminGlobalPage } from '@/pages/AdminGlobalPage';
 import { LoginPage } from '@/pages/LoginPage';
+import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 
 const INVALID_CONTA_VALUES = new Set(['', 'null', 'undefined']);
 
@@ -52,6 +55,8 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
+        <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
         <Route path="/app/login" element={<Navigate to="/login" replace />} />
         <Route path="/app/signup" element={<Navigate to="/login" replace />} />
         <Route element={<ProtectedLayout />}>
@@ -60,6 +65,7 @@ const App = () => {
           <Route path="/leads/lista" element={<LeadsListPage />} />
           <Route path="/leads/kanban" element={<LeadsKanbanPage />} />
           <Route path="/instancias" element={<InstanciasPage />} />
+          <Route path="/usuarios" element={<UsuariosPage />} />
           <Route path="/admin" element={<AdminGlobalPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

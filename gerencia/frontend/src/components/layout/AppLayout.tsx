@@ -1,6 +1,6 @@
 import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bot, ChevronDown, ChevronLeft, ChevronRight, KeyRound, LayoutDashboard, LogOut, MessageSquare, Settings, Users } from 'lucide-react';
+import { Bot, ChevronDown, ChevronLeft, ChevronRight, KeyRound, LayoutDashboard, LogOut, MessageSquare, Settings, UserCog, Users } from 'lucide-react';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ const links = [
   { to: '/leads/lista', label: 'Leads - Lista', icon: MessageSquare },
   { to: '/leads/kanban', label: 'Leads - Kanban', icon: Bot },
   { to: '/instancias', label: 'Instancias WhatsApp', icon: Settings, requiresAdmin: true },
+  { to: '/usuarios', label: 'Usuarios', icon: UserCog, requiresAdmin: true },
   { to: '/admin', label: 'Admin Global', icon: Users, requiresSuperAdmin: true },
 ];
 

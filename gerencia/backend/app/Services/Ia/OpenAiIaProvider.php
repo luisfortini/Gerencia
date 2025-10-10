@@ -31,7 +31,7 @@ class OpenAiIaProvider implements IaProviderContract
         $messages = [
             [
                 'role' => 'system',
-                'content' => 'Voce eh um analista comercial senior. Classifique o lead nos status permitidos (novo, qualificado, interessado, negociacao, follow_up, ganho, perdido). Considere historico, direcao das mensagens e conteudo recente. Sempre responda apenas JSON valido contendo status, status_conf (entre 0.70 e 1.0), valor_total (numero ou null), objecao (string ou null) e um objeto detalhes com observacoes relevantes, incluindo ultima_mensagem e historico_mensagens quando fizer sentido. Voce pode retroceder o status (por exemplo, de follow_up para interessado) quando os sinais forem de perda de interesse. Quando retroceder, adicione em detalhes.motivo_retrocesso uma breve explicacao. Prefira status_conf >= 0.75 quando houver indicios claros e nunca retorne status_conf igual a 0.'
+                'content' => 'Voce eh um analista comercial senior. Classifique o lead nos status permitidos (novo, qualificado, interessado, negociacao, follow_up, ganho, perdido). Considere historico, direcao das mensagens e conteudo recente. Sempre responda apenas JSON valido contendo status, status_conf (entre 0.70 e 1.0), valor_total (numero ou null), objecao (string ou null), um objeto detalhes com observacoes relevantes (inclua ultima_mensagem e historico_mensagens quando fizer sentido) e o campo responsavel_sugerido. Se receber o array usuarios_disponiveis, tente identificar qual usuario deve assumir o lead e retorne responsavel_sugerido como um objeto { \"id\": <id do usuario>, \"nome\": \"Nome do usuario\", \"motivo\": \"Resumo curto\" }. Caso nao seja possivel sugerir alguem, retorne responsavel_sugerido = null. Voce pode retroceder o status (por exemplo, de follow_up para interessado) quando os sinais forem de perda de interesse. Quando retroceder, adicione em detalhes.motivo_retrocesso uma breve explicacao. Prefira status_conf >= 0.75 quando houver indicios claros e nunca retorne status_conf igual a 0.'
             ],
             [
                 'role' => 'user',
@@ -68,6 +68,14 @@ class OpenAiIaProvider implements IaProviderContract
                                 'valor_total' => ['type' => ['number', 'null']],
                                 'objecao' => ['type' => ['string', 'null']],
                                 'detalhes' => ['type' => 'object'],
+                                'responsavel_sugerido' => [
+                                    'type' => ['object', 'null'],
+                                    'properties' => [
+                                        'id' => ['type' => ['number', 'null']],
+                                        'nome' => ['type' => ['string', 'null']],
+                                        'motivo' => ['type' => ['string', 'null']],
+                                    ],
+                                ],
                             ],
                             'required' => ['status', 'status_conf'],
                         ],
@@ -117,6 +125,20 @@ class OpenAiIaProvider implements IaProviderContract
         if (! array_key_exists('valor_total', $decoded)) {
             $decoded['valor_total'] = null;
         }
+
+        $responsavelSugerido = $decoded['responsavel_sugerido'] ?? null;
+        if (is_array($responsavelSugerido)) {
+            $decoded['responsavel_id'] = isset($responsavelSugerido['id']) && is_numeric($responsavelSugerido['id'])
+                ? (int) $responsavelSugerido['id']
+                : null;
+            $decoded['responsavel_nome'] = isset($responsavelSugerido['nome']) && is_string($responsavelSugerido['nome'])
+                ? $responsavelSugerido['nome']
+                : null;
+        } else {
+            $decoded['responsavel_id'] = null;
+            $decoded['responsavel_nome'] = null;
+        }
+        unset($decoded['responsavel_sugerido']);
 
         return IaResponse::fromArray($decoded);
     }

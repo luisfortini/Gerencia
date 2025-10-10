@@ -34,6 +34,8 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table';
 import { api } from '@/lib/api';
+import { LeadDrawer } from '@/features/leads/LeadDrawer';
+import { useLeadDetails } from '@/hooks/useLeadDetails';
 
 export type DashboardPeriod = '7d' | '30d' | '90d';
 export type DashboardWhatsapp = 'all' | string;
@@ -145,6 +147,8 @@ const DashboardGestor = () => {
   const [period, setPeriod] = useState<DashboardPeriod>('7d');
   const [whatsapp, setWhatsapp] = useState<DashboardWhatsapp>('all');
   const [search, setSearch] = useState('');
+  const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
+  const [isLeadDrawerOpen, setIsLeadDrawerOpen] = useState(false);
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -168,6 +172,46 @@ const DashboardGestor = () => {
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period, whatsapp]);
+
+  const leadDetails = useLeadDetails(selectedLeadId);
+
+  useEffect(() => {
+    if (
+      selectedLeadId !== null &&
+      leadDetails.data &&
+      leadDetails.data.led_id === selectedLeadId
+    ) {
+      setIsLeadDrawerOpen(true);
+    }
+  }, [leadDetails.data, selectedLeadId]);
+
+  const handleOpenLead = (leadIdentifier: string) => {
+    const parsedId = Number(leadIdentifier);
+
+    if (Number.isNaN(parsedId)) {
+      console.warn('ID de lead invalido recebido no dashboard:', leadIdentifier);
+      return;
+    }
+
+    if (selectedLeadId === parsedId) {
+      setIsLeadDrawerOpen(true);
+      void leadDetails.refetch();
+      return;
+    }
+
+    if (selectedLeadId !== parsedId) {
+      setIsLeadDrawerOpen(false);
+    }
+
+    setSelectedLeadId(parsedId);
+  };
+
+  const handleLeadDrawerChange = (open: boolean) => {
+    if (!open) {
+      setIsLeadDrawerOpen(false);
+      setSelectedLeadId(null);
+    }
+  };
 
   const kpiCards = useMemo(() => {
     if (!data) {
@@ -208,7 +252,8 @@ const DashboardGestor = () => {
   }, [data]);
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Visao Geral — GerencIA</h1>
@@ -491,14 +536,34 @@ const DashboardGestor = () => {
                     </TableCell>
                     <TableCell>{Math.max(1, Math.round(alerta.atrasoMin / 60))} h</TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm">
-                          Ver conversa
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Atribuir
-                        </Button>
-                      </div>
+                      {(() => {
+                        const parsedAlertId = Number(alerta.id);
+                        const isLoadingLead =
+                          !Number.isNaN(parsedAlertId) &&
+                          selectedLeadId === parsedAlertId &&
+                          leadDetails.isFetching;
+
+                        return (
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={isLoadingLead}
+                              onClick={() => handleOpenLead(alerta.id)}
+                            >
+                              {isLoadingLead ? 'Abrindo...' : 'Ver conversa'}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={isLoadingLead}
+                              onClick={() => handleOpenLead(alerta.id)}
+                            >
+                              {isLoadingLead ? 'Carregando...' : 'Atribuir'}
+                            </Button>
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                   </TableRow>
                 );
@@ -522,6 +587,12 @@ const DashboardGestor = () => {
         Dados provenientes do endpoint /api/dashboard. Ajuste filtros para refinar as metricas.
       </footer>
     </div>
+    <LeadDrawer
+      lead={leadDetails.data ?? null}
+      open={isLeadDrawerOpen}
+      onOpenChange={handleLeadDrawerChange}
+    />
+    </>
   );
 };
 

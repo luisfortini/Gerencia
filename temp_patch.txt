@@ -1,0 +1,171 @@
+*** Begin Patch
+*** Update File: gerencia/frontend/src/pages/AdminGlobalPage.tsx
+@@
+       <Card>
+         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+           <div>
+             <CardTitle>Contas</CardTitle>
+             <CardDescription>Cadastre, edite ou inative contas clientes.</CardDescription>
+@@
+           {contas.length > 0 ? (
+             <Table>
+               <TableHead>
+                 <TableRow>
+                   <TableHeaderCell>Conta</TableHeaderCell>
+                   <TableHeaderCell>Plano / Status</TableHeaderCell>
+                   <TableHeaderCell>Limites</TableHeaderCell>
+                   <TableHeaderCell>Uso atual</TableHeaderCell>
+                   <TableHeaderCell>Ações</TableHeaderCell>
+                 </TableRow>
+               </TableHead>
+               <TableBody>
+                 {contas.map((conta) => {
+                   const isDeleting = deletingContaId === conta.cta_id && deleteContaMutation.isPending;
+ 
+                   return (
+                     <TableRow key={conta.cta_id}>
+@@
+           ) : null}
+         </CardContent>
+       </Card>
++
++      <Modal
++        open={contaModalOpen}
++        onOpenChange={(open) => {
++          if (!open) {
++            handleCloseContaModal();
++          } else {
++            setContaModalOpen(true);
++          }
++        }}
++        title={editingContaId === null ? "Nova conta" : "Editar conta"}
++        description="Defina o plano, limites e status da conta."
++        footer={
++          <div className="flex gap-2">
++            <Button type="button" variant="ghost" onClick={handleCloseContaModal} disabled={isSavingConta}>
++              Cancelar
++            </Button>
++            <Button type="submit" form="conta-form" disabled={isSavingConta}>
++              {isSavingConta ? "Salvando..." : editingContaId === null ? "Criar conta" : "Salvar alterações"}
++            </Button>
++          </div>
++        }
++      >
++        <form id="conta-form" className="space-y-4" onSubmit={handleContaSubmit}>
++          <div className="grid gap-3 md:grid-cols-2">
++            <div className="space-y-1">
++              <label className="text-xs font-medium text-subtle" htmlFor="conta-nome">
++                Nome da conta
++              </label>
++              <Input
++                id="conta-nome"
++                value={contaForm.nome}
++                onChange={(event) => handleContaChange("nome", event.target.value)}
++                required
++              />
++            </div>
++            <div className="space-y-1">
++              <label className="text-xs font-medium text-subtle" htmlFor="conta-slug">
++                Slug
++              </label>
++              <Input
++                id="conta-slug"
++                value={contaForm.slug}
++                onChange={(event) => handleContaChange("slug", event.target.value)}
++                required
++              />
++              <p className="text-xs text-muted-foreground">Utilize letras minúsculas e hífens (ex: minha-conta).</p>
++            </div>
++          </div>
++
++          <div className="grid gap-3 md:grid-cols-2">
++            <div className="space-y-1">
++              <label className="text-xs font-medium text-subtle" htmlFor="conta-plano">
++                Plano
++              </label>
++              <Select
++                id="conta-plano"
++                value={contaForm.plano}
++                onChange={(event) => handleContaChange("plano", event.target.value as ContaFormState["plano"])}
++              >
++                <option value="mensal">Mensal</option>
++                <option value="anual">Anual</option>
++              </Select>
++            </div>
++            <div className="space-y-1">
++              <label className="text-xs font-medium text-subtle" htmlFor="conta-status">
++                Status
++              </label>
++              <Select
++                id="conta-status"
++                value={contaForm.status}
++                onChange={(event) => handleContaChange("status", event.target.value as ContaFormState["status"])}
++              >
++                <option value="ativo">Ativo</option>
++                <option value="inativo">Inativo</option>
++              </Select>
++            </div>
++          </div>
++
++          <div className="grid gap-3 md:grid-cols-3">
++            <div className="space-y-1">
++              <label className="text-xs font-medium text-subtle" htmlFor="conta-limite-instancias">
++                Limite de instâncias
++              </label>
++              <Input
++                id="conta-limite-instancias"
++                type="number"
++                min={1}
++                value={contaForm.limiteInstancias}
++                onChange={(event) => handleContaChange("limiteInstancias", event.target.value)}
++                required
++              />
++            </div>
++            <div className="space-y-1">
++              <label className="text-xs font-medium text-subtle" htmlFor="conta-limite-usuarios">
++                Limite de usuários
++              </label>
++              <Input
++                id="conta-limite-usuarios"
++                type="number"
++                min={1}
++                value={contaForm.limiteUsuarios}
++                onChange={(event) => handleContaChange("limiteUsuarios", event.target.value)}
++                required
++              />
++            </div>
++            <div className="space-y-1">
++              <label className="text-xs font-medium text-subtle" htmlFor="conta-retencao">
++                Retenção (dias)
++              </label>
++              <Input
++                id="conta-retencao"
++                type="number"
++                min={1}
++                value={contaForm.retencaoDias}
++                onChange={(event) => handleContaChange("retencaoDias", event.target.value)}
++                required
++              />
++            </div>
++          </div>
++
++          <div className="space-y-1">
++            <label className="text-xs font-medium text-subtle" htmlFor="conta-observacoes">
++              Observações
++            </label>
++            <Textarea
++              id="conta-observacoes"
++              rows={3}
++              value={contaForm.observacoes}
++              onChange={(event) => handleContaChange("observacoes", event.target.value)}
++              placeholder="Informações adicionais, notas internas ou particularidades do cliente."
++            />
++          </div>
++
++          {contaModalError ? <p className="text-sm text-red-600">{contaModalError}</p> : null}
++        </form>
++      </Modal>
+     </div>
+   );
+ };
+*** End Patch

@@ -9,6 +9,7 @@ use App\Models\Lead;
 use App\Models\LogStatusLead;
 use App\Models\Usuario;
 use App\Services\SystemSettingService;
+use App\Services\UsuarioLimitService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -18,6 +19,7 @@ class SuperAdminController extends Controller
 {
     public function __construct(
         private readonly SystemSettingService $settings,
+        private readonly UsuarioLimitService $usuarioLimit,
     ) {
     }
 
@@ -38,12 +40,39 @@ class SuperAdminController extends Controller
         return response()->json($contas);
     }
 
+    public function updateConta(Request $request, Conta $conta): JsonResponse
+    {
+        $data = $request->validate([
+            'cta_nome' => ['sometimes', 'string', 'max:150'],
+            'cta_slug' => ['sometimes', 'string', 'max:150', Rule::unique('conta', 'cta_slug')->ignore($conta->cta_id, 'cta_id')],
+            'cta_limite_instancias' => ['sometimes', 'integer', 'min:1'],
+            'cta_limite_usuarios' => ['sometimes', 'integer', 'min:1'],
+            'cta_retencao_dias' => ['sometimes', 'integer', 'min:1'],
+            'cta_plano_tipo' => ['sometimes', Rule::in(['mensal', 'anual'])],
+            'cta_status' => ['sometimes', 'string', Rule::in(['ativo', 'inativo'])],
+            'cta_observacoes' => ['sometimes', 'nullable', 'string'],
+        ]);
+
+        $conta->fill($data);
+        $conta->save();
+
+        return response()->json($conta);
+    }
+
+    public function deleteConta(Conta $conta)
+    {
+        $conta->delete();
+
+        return response()->noContent();
+    }
+
     public function storeConta(Request $request): JsonResponse
     {
         $data = $request->validate([
             'cta_nome' => ['required', 'string', 'max:150'],
             'cta_slug' => ['required', 'string', 'max:150', 'unique:conta,cta_slug'],
             'cta_limite_instancias' => ['required', 'integer', 'min:1'],
+            'cta_limite_usuarios' => ['required', 'integer', 'min:1'],
             'cta_retencao_dias' => ['required', 'integer', 'min:1'],
             'cta_plano_tipo' => ['required', Rule::in(['mensal', 'anual'])],
         ]);
@@ -62,7 +91,10 @@ class SuperAdminController extends Controller
             'usr_email' => ['required', 'email', 'unique:usuario,usr_email'],
             'usr_senha' => ['required', 'string', 'min:6'],
             'usr_papel' => ['required', Rule::in(['gestor', 'operador'])],
+            'usr_admin' => ['sometimes', 'boolean'],
         ]);
+
+        $this->usuarioLimit->assertCanAddActiveUsers($conta);
 
         $usuario = Usuario::create([
             'usr_ctaid' => $conta->cta_id,
@@ -71,6 +103,7 @@ class SuperAdminController extends Controller
             'usr_senha' => Hash::make($data['usr_senha']),
             'usr_papel' => $data['usr_papel'],
             'usr_superadmin' => false,
+            'usr_admin' => (bool) ($data['usr_admin'] ?? false),
             'usr_ativo' => true,
         ]);
 
@@ -152,3 +185,4 @@ class SuperAdminController extends Controller
         ];
     }
 }
+

@@ -34,6 +34,7 @@ class ContaSeeder extends Seeder
                 'cta_nome' => 'ACME Vendas',
                 'cta_plano_tipo' => 'mensal',
                 'cta_limite_instancias' => 2,
+                'cta_limite_usuarios' => 5,
                 'cta_retencao_dias' => 30,
                 'cta_status' => 'ativo',
             ]
