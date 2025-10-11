@@ -12,7 +12,12 @@ $localOrigins = [
 $allowedOrigins = array_values(array_filter(array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', implode(',', $localOrigins))))));
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => [  
+         'api/*',
+         'auth/*',
+         'webhook/*',
+         'sanctum/csrf-cookie',
+    ],
 
     'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 

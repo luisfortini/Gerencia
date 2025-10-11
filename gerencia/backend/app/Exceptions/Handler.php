@@ -1,17 +1,22 @@
 <?php
 
-namespace App\Exceptions;
+namespace App\\Exceptions;
 
-use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\\Auth\\AuthenticationException;
+use Illuminate\\Foundation\\Exceptions\\Handler as ExceptionHandler;
 use Throwable;
 
 class Handler extends ExceptionHandler
 {
-    protected $levels = [];
+    protected  = [
+        //
+    ];
 
-    protected $dontReport = [];
+    protected  = [
+        //
+    ];
 
-    protected $dontFlash = [
+    protected  = [
         'current_password',
         'password',
         'password_confirmation',
@@ -19,8 +24,15 @@ class Handler extends ExceptionHandler
 
     public function register(): void
     {
-        $this->reportable(function (Throwable $e) {
+        ->reportable(function (Throwable ) {
             //
         });
+    }
+
+    protected function unauthenticated(, AuthenticationException )
+    {
+        return response()->json([
+            'message' => 'Unauthenticated.'
+        ], 401);
     }
 }

@@ -8,8 +8,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Mail\PasswordResetMail;
 
 class AuthController extends Controller
 {
@@ -112,10 +114,22 @@ class AuthController extends Controller
             ]
         );
 
-        Log::info('Token de redefinicao de senha gerado.', [
-            'email' => $usuario->usr_email,
-            'token' => $token,
-        ]);
+        $frontendUrl = rtrim(config('app.frontend_url', config('app.url')), '/');
+        $resetUrl = sprintf(
+            '%s/redefinir-senha?email=%s&token=%s',
+            $frontendUrl,
+            urlencode($usuario->usr_email),
+            urlencode($token)
+        );
+
+        try {
+            Mail::to($usuario->usr_email)->send(new PasswordResetMail($usuario, $token, $resetUrl));
+        } catch (\Throwable $exception) {
+            Log::error('Falha ao enviar e-mail de recuperacao de senha.', [
+                'email' => $usuario->usr_email,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
 
         return response()->json([
             'message' => 'Se o e-mail estiver cadastrado, enviaremos instrucoes para recuperar a senha em instantes.'
@@ -162,7 +176,8 @@ class AuthController extends Controller
         DB::table('password_reset_tokens')->where('email', $data['email'])->delete();
 
         return response()->json([
-            'message' => 'Senha redefinida com sucesso. Faça login com a nova senha.'
+            'message' => 'Senha redefinida com sucesso. Faca login com a nova senha.'
         ]);
     }
 }
+
