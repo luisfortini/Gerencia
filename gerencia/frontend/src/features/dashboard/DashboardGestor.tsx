@@ -111,6 +111,43 @@ const PERIOD_OPTIONS: Array<{ value: DashboardPeriod; label: string }> = [
   { value: '90d', label: 'Ultimos 90 dias' },
 ];
 
+const normalizeDashboardResponse = (raw: DashboardResponse | string): DashboardResponse | null => {
+  if (typeof raw === 'string') {
+    const sanitized = raw.trim().replace(/^\uFEFF/, '');
+
+    const attemptParse = (value: string) => {
+      try {
+        return JSON.parse(value) as DashboardResponse;
+      } catch {
+        return null;
+      }
+    };
+
+    let parsed = attemptParse(sanitized);
+
+    if (!parsed) {
+      const start = sanitized.indexOf('{');
+      const end = sanitized.lastIndexOf('}');
+      if (start !== -1 && end !== -1 && end > start) {
+        parsed = attemptParse(sanitized.slice(start, end + 1));
+      }
+    }
+
+    if (!parsed) {
+      console.warn('Resposta de dashboard inesperada; nao foi possivel interpretar JSON.', sanitized);
+      return null;
+    }
+
+    return parsed;
+  }
+
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+
+  return raw;
+};
+
 export const fetchDashboard = async (params: {
   period: DashboardPeriod;
   whatsapp: DashboardWhatsapp;
@@ -124,7 +161,13 @@ export const fetchDashboard = async (params: {
     },
   });
 
-  return data;
+  const normalized = normalizeDashboardResponse(data as DashboardResponse | string);
+
+  if (!normalized?.kpis) {
+    throw new Error('Resposta do dashboard invalida ou incompleta.');
+  }
+
+  return normalized;
 };
 
 const formatNumber = (value: number) => value.toLocaleString('pt-BR');
@@ -551,15 +594,7 @@ const DashboardGestor = () => {
                               disabled={isLoadingLead}
                               onClick={() => handleOpenLead(alerta.id)}
                             >
-                              {isLoadingLead ? 'Abrindo...' : 'Ver conversa'}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={isLoadingLead}
-                              onClick={() => handleOpenLead(alerta.id)}
-                            >
-                              {isLoadingLead ? 'Carregando...' : 'Atribuir'}
+                              {isLoadingLead ? 'Abrindo...' : 'Detalhes'}
                             </Button>
                           </div>
                         );

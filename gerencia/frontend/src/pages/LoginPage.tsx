@@ -11,17 +11,53 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 interface LoginResponse {
   token: string;
-  usuario: {
+  usuario?: {
     id: number;
     nome: string;
     papel: string;
     superadmin: boolean;
     admin: boolean;
     conta_id: number | null;
-  };
+  } | null;
 }
 
 const INVALID_CONTA_VALUES = new Set(["", "null", "undefined"]);
+
+const parseLoginResponse = (raw: LoginResponse | string): LoginResponse | null => {
+  if (typeof raw === "string") {
+    const sanitized = raw.trim().replace(/^\uFEFF/, "");
+
+    const attemptParse = (value: string) => {
+      try {
+        return JSON.parse(value) as LoginResponse;
+      } catch {
+        return null;
+      }
+    };
+
+    let parsed = attemptParse(sanitized);
+
+    if (!parsed) {
+      const start = sanitized.indexOf("{");
+      const end = sanitized.lastIndexOf("}");
+      if (start !== -1 && end !== -1 && end > start) {
+        parsed = attemptParse(sanitized.slice(start, end + 1));
+      }
+    }
+
+    if (!parsed) {
+      console.warn("Resposta de login inesperada; nao foi possivel interpretar JSON.", sanitized);
+    }
+
+    return parsed;
+  }
+
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+
+  return raw;
+};
 
 const parseStoredUser = (value: string | null) => {
   if (!value) {
@@ -65,19 +101,38 @@ export const LoginPage = () => {
         senha,
       });
 
-      localStorage.setItem("gerencia_token", data.token);
+      const parsedResponse = parseLoginResponse(data as LoginResponse | string);
 
-      if (data.usuario.conta_id !== null && data.usuario.conta_id !== undefined) {
-        localStorage.setItem("gerencia_conta", String(data.usuario.conta_id));
+      if (!parsedResponse?.token) {
+        setError("Nao foi possivel validar a resposta do servidor. Tente novamente em instantes.");
+        localStorage.removeItem("gerencia_conta");
+        localStorage.removeItem("gerencia_usuario");
+        return;
+      }
+
+      localStorage.setItem("gerencia_token", parsedResponse.token);
+
+      const usuario = parsedResponse.usuario;
+
+      if (!usuario) {
+        setError("Nao foi possivel carregar os dados do usuario. Tente novamente em instantes.");
+        localStorage.removeItem("gerencia_conta");
+        localStorage.removeItem("gerencia_usuario");
+        return;
+      }
+
+      if (usuario.conta_id !== null && usuario.conta_id !== undefined) {
+        localStorage.setItem("gerencia_conta", String(usuario.conta_id));
       } else {
         localStorage.removeItem("gerencia_conta");
       }
 
-      localStorage.setItem("gerencia_usuario", JSON.stringify(data.usuario));
+      localStorage.setItem("gerencia_usuario", JSON.stringify(usuario));
 
       queryClient.clear();
       navigate(redirectTo, { replace: true });
     } catch (err) {
+      console.log(err);
       if (isAxiosError(err)) {
         if (err.response?.status === 401) {
           setError("Credenciais invalidas. Verifique o e-mail e a senha informados.");

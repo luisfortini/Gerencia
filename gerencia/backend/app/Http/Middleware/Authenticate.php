@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Middleware;
 
@@ -15,3 +15,4 @@ class Authenticate extends Middleware
         return null;
     }
 }
+

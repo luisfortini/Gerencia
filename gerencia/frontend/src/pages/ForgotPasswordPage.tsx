@@ -25,8 +25,12 @@ export const ForgotPasswordPage = () => {
       setMessage(data.message ?? 'Se o e-mail estiver cadastrado, enviaremos instrucoes para recuperar a senha em instantes.');
     } catch (err) {
       if (isAxiosError(err)) {
-        const feedback = err.response?.data?.message ?? 'Nao foi possivel iniciar a recuperacao de senha.';
-        setError(typeof feedback === 'string' ? feedback : 'Nao foi possivel iniciar a recuperacao de senha.');
+        if (err.code === 'ERR_NETWORK') {
+          setError('Nao foi possivel conectar ao servidor. Verifique sua conexao ou tente novamente em instantes.');
+        } else {
+          const feedback = err.response?.data?.message ?? 'Nao foi possivel iniciar a recuperacao de senha.';
+          setError(typeof feedback === 'string' ? feedback : 'Nao foi possivel iniciar a recuperacao de senha.');
+        }
       } else {
         setError('Ocorreu um erro inesperado. Tente novamente em instantes.');
       }
@@ -79,4 +83,3 @@ export const ForgotPasswordPage = () => {
 };
 
 export default ForgotPasswordPage;
-
