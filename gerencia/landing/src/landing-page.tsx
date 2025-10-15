@@ -1,226 +1,382 @@
-﻿import { useMemo, useState } from "react";
+import { useState } from "react";
 import logoFull from "./assets/logo-full.svg";
 import logoMark from "./assets/logo-mark.svg";
+import dashHero from "./assets/dash01.png";
+import dashSolution from "./assets/dash02.png";
+import kanbanImage from "./assets/kanban.png";
+import listaImage from "./assets/lista.png";
+
+const dorItems = [
+  "Vendedor não preenche o CRM",
+  "Nenhum controle real sobre os contatos",
+  "Não sabe em que etapa cada cliente está",
+  "Não tem ideia do valor total que está sendo negociado",
+  "Perde oportunidades por falta de acompanhamento",
+  "Falta tempo para classificar conversas",
+  "Não sabe quais são as objeções dos clientes",
+  "Acha CRM complicado de usar e configurar",
+  "Acha CRM caro",
+  "Depende dos vendedores para saber o que está acontecendo",
+];
+
+const solucaoCards = [
+  "Configuração fácil — basta conectar o WhatsApp",
+  "Visualize conversas direto no CRM",
+  "Classificação automática de conversas",
+  "Rastreamento automático de valores negociados",
+  "Dashboard completo de acompanhamento",
+  "Identificação automática de objeções",
+  "Acompanhamento de atendentes e vendedores",
+];
 
 const beneficios = [
-  "Status dos leads atualizados automaticamente pela IA",
-  "Monitoramento em tempo real das conversas no WhatsApp",
-  "Detecção automática de objeções (Preço, Urgência e mais)",
-  "Kanban inteligente com confirmação orientada por dados",
+  "Clareza total sobre os atendimentos",
+  "Dados reais para decisões inteligentes",
+  "Acompanhamento da equipe",
+  "Independência da operação",
+  "Acompanhamento em tempo real",
+  "Entendimento automático das objeções",
 ];
 
-const passos = [
+const planos = [
   {
-    destaque: "Conecte",
-    descricao: "Associe sua instância Evolution API com poucos cliques e selecione quais filas acompanhar.",
+    nome: "Start",
+    whatsapp: "1 número de WhatsApp",
+    usuarios: "3 usuários",
+    precoMensal: 99,
+    precoAnualMensal: 79.9,
+    cta: "Quero começar com o Start",
+    recursos: [
+      "Integração com WhatsApp e dashboards em tempo real",
+      "Classificação automática de conversas com IA",
+    ],
   },
   {
-    destaque: "Aprenda",
-    descricao: "A IA interpreta cada mensagem em segundos, identifica objeções e calcula o próximo status sugerido.",
-  },
-  {
-    destaque: "Escale",
-    descricao: "Gestores validam as sugestões no Kanban, liberando a equipe para focar nas conversas decisivas.",
+    nome: "Pro",
+    whatsapp: "2 números de WhatsApp",
+    usuarios: "5 usuários",
+    precoMensal: 179.9,
+    precoAnualMensal: 149.9,
+    cta: "Quero o plano Pro",
+    destaque: true,
+    recursos: [
+      "Integração multi-fila com dashboards em tempo real",
+      "Classificação automática de conversas com IA",
+      "Suporte prioritário e onboarding assistido",
+    ],
   },
 ];
 
-const faq = [
-  {
-    pergunta: "Preciso instalar algo no meu WhatsApp?",
-    resposta: "Não. Basta conectar sua instância Evolution API e a GerencIA cuida do restante com atualizações automáticas.",
-  },
-  {
-    pergunta: "Quantos usuários posso cadastrar?",
-    resposta: "Cadastre gestores e operadores ilimitados. Os controles de acesso são definimos diretamente no painel.",
-  },
-  {
-    pergunta: "Posso mudar de plano quando quiser?",
-    resposta: "Sim, é possível alternar entre o plano mensal e anual a qualquer momento, sem taxas ocultas.",
-  },
-];
-
-const recursosPlano = [
-  "1 instância WhatsApp inclusa (limite gerenciado no painel)",
-  "IA proprietária Tier-1 com fallback OpenAI automático",
-  "Dashboard gestor com KPIs, alertas de SLA e funil em tempo real",
-  "Kanban inteligente com contexto de mensagens e campo obrigatório em Ganho",
-];
+const SectionCTA = ({ href, label }: { href: string; label: string }) => (
+  <div className="mt-10">
+    <a
+      href={href}
+      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#00C2FF] px-8 py-3 text-center text-sm font-semibold text-[#0C1E3C] transition hover:scale-[1.01] hover:bg-[#29d2ff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00C2FF] md:w-auto"
+    >
+      {label}
+    </a>
+  </div>
+);
 
 export const LandingPage = () => {
-  const [plano, setPlano] = useState<"mensal" | "anual">("mensal");
   const appUrl = import.meta.env.VITE_APP_URL ?? "http://localhost:5175";
-
-  const { preco, descricao } = useMemo(() => {
-    if (plano === "mensal") {
-      return { preco: "R$ 99/mês", descricao: "Cobrança recorrente mensal sem fidelidade." };
-    }
-
-    return { preco: "R$ 79,90/mês", descricao: "Economize 19% com a cobrança anual antecipada." };
-  }, [plano]);
+  const [billingCycle, setBillingCycle] = useState<"mensal" | "anual">("mensal");
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+  const economiaMaxima = planos.reduce(
+    (max, plano) => Math.max(max, Math.round((1 - plano.precoAnualMensal / plano.precoMensal) * 100)),
+    0
+  );
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#090b18] text-brand-silver">
-      <DecoracaoHero />
+    <div className="relative min-h-screen overflow-hidden bg-[#0C1E3C] text-[#E6E6E6]">
+      <BackgroundGlow />
 
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 text-sm">
+      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <a href="#hero" className="flex items-center gap-3">
-          <img src={logoFull} alt="GerencIA" className="hidden h-12 w-auto md:block" />
-          <img src={logoMark} alt="GerencIA" className="h-11 w-auto md:hidden" />
+          <img src={logoFull} alt="GerêncIA" className="hidden h-10 w-auto md:block" />
+          <img src={logoMark} alt="GerêncIA" className="h-10 w-auto md:hidden" />
         </a>
-        <nav className="hidden items-center gap-6 text-xs uppercase tracking-[0.2em] text-brand-silver/70 md:flex">
-          <a className="transition hover:text-white" href="#como-funciona">
-            Como funciona
+        <nav className="hidden items-center gap-6 text-sm text-[#B8D7E6] md:flex">
+          <a className="transition hover:text-white" href="#dor">
+            É pra mim?
+          </a>
+          <a className="transition hover:text-white" href="#solucao">
+            Solução
           </a>
           <a className="transition hover:text-white" href="#beneficios">
             Benefícios
           </a>
-          <a className="transition hover:text-white" href="#preco">
-            Plano
+          <a className="transition hover:text-white" href="#diferencial">
+            Diferencial
           </a>
-          <a className="transition hover:text-white" href="#faq">
-            FAQ
+          <a className="transition hover:text-white" href="#planos">
+            Planos
           </a>
         </nav>
         <a
-          className="inline-flex items-center justify-center rounded-full border border-white/15 px-6 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-white transition hover:bg-white/10"
+          className="inline-flex items-center justify-center rounded-full border border-[#00C2FF]/40 px-5 py-2 text-sm font-medium text-[#E6E6E6] transition hover:bg-[#102746]/80"
           href={`${appUrl}/login`}
         >
           Entrar
         </a>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 pb-20" id="hero">
-        <section className="py-20 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1 text-[11px] uppercase tracking-[0.28em] text-brand-silver/80">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-silver/60" aria-hidden />
-            CRM que pensa e age com você
-          </span>
-          <h1 className="mt-6 text-4xl font-semibold leading-tight text-white md:text-5xl">
-            Leads organizados, objeções claras e seu time focado no que fecha negócio.
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-brand-silver/80">
-            Centralize conversas do WhatsApp, monitore o funil em tempo real e deixe a IA atualizar os status. Você acompanha as métricas certas e age no momento certo.
-          </p>
-          <div className="mt-12 flex flex-col items-center justify-center gap-4 md:flex-row">
-            <a
-              href={`${appUrl}/login`}
-              className="w-full rounded-full bg-brand-navy px-8 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-brand-navy/40 transition hover:bg-brand-navyDark md:w-auto"
-            >
-              Começar agora
-            </a>
-            <a
-              href="#como-funciona"
-              className="group inline-flex items-center gap-2 text-sm font-medium text-brand-silver transition hover:text-white"
-            >
-              Ver como funciona
-              <span className="translate-y-[1px] transition-transform group-hover:translate-x-1">→</span>
-            </a>
-          </div>
-        </section>
-
-        <section id="como-funciona" className="rounded-3xl border border-white/10 bg-white/6 p-8 backdrop-blur">
-          <h2 className="text-2xl font-semibold text-white">Como a jornada acontece</h2>
-          <p className="mt-2 text-sm text-brand-silver/70">
-            Em poucos passos a sua operação começa a rodar com inteligência assistida.
-          </p>
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {passos.map((passo) => (
-              <Passo key={passo.destaque} destaque={passo.destaque} descricao={passo.descricao} />
-            ))}
-          </div>
-        </section>
-
-        <section id="beneficios" className="mt-20">
-          <div className="flex flex-col gap-3 text-left md:flex-row md:items-end md:justify-between">
+      <main className="relative z-10 mx-auto flex max-w-6xl flex-col gap-20 px-6 pb-20 md:gap-24">
+        <section id="hero" className="pt-12 md:pt-16">
+          <div className="grid gap-12 md:grid-cols-[1.1fr,0.9fr] md:items-center">
             <div>
-              <h2 className="text-3xl font-semibold text-white">Por que equipes escolhem a GerencIA</h2>
-              <p className="mt-2 max-w-xl text-sm text-brand-silver/70">Automação de status, insights acionáveis e um painel que fala a língua do gestor comercial.</p>
-            </div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[11px] uppercase tracking-[0.28em] text-brand-silver/80">
-              Resultados em dias, não meses
-            </span>
-          </div>
-          <ul className="mt-8 grid gap-4 md:grid-cols-2">
-            {beneficios.map((beneficio) => (
-              <li key={beneficio} className="group flex items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.07] p-5 transition hover:border-brand-silver/40">
-                <span className="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-navy/40 text-sm font-semibold text-white">
-                  ✓
-                </span>
-                <p className="text-sm text-brand-silver group-hover:text-white">{beneficio}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section id="preco" className="mt-24 text-center">
-          <span className="text-[11px] uppercase tracking-[0.28em] text-brand-silver/70">Plano único</span>
-          <h2 className="mt-4 text-3xl font-semibold text-white">Simples de contratar, fácil de escalar</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-brand-silver/70">
-            Comece hoje mesmo e ajuste o ritmo conforme a evolução do seu time comercial.
-          </p>
-          <div className="mt-8 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.06] p-2">
-            <ToggleButton ativo={plano === "mensal"} onClick={() => setPlano("mensal")} label="Mensal" />
-            <ToggleButton ativo={plano === "anual"} onClick={() => setPlano("anual")} label="Anual" badge="-19%" />
-          </div>
-          <div className="mx-auto mt-10 max-w-lg rounded-3xl border border-white/10 bg-white/[0.08] p-10 text-left text-brand-silver shadow-lg shadow-black/30">
-            <p className="text-xs uppercase tracking-[0.28em] text-brand-silver/70">Tudo incluso</p>
-            <p className="mt-4 text-4xl font-semibold text-white">{preco}</p>
-            <p className="mt-2 text-sm text-brand-silver/80">{descricao}</p>
-            <ul className="mt-8 space-y-3 text-sm">
-              {recursosPlano.map((recurso) => (
-                <li key={recurso} className="flex items-start gap-3">
-                  <span className="mt-1 h-2 w-2 rounded-full bg-brand-silver" aria-hidden />
-                  <span>{recurso}</span>
-                </li>
-              ))}
-            </ul>
-            <a
-              href={`${appUrl}/login`}
-              className="mt-10 inline-flex w-full items-center justify-center rounded-full bg-brand-navy px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-navy/35 transition hover:bg-brand-navyDark"
-            >
-              Quero testar na minha operação
-            </a>
-          </div>
-        </section>
-
-        <section id="faq" className="mt-24">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h2 className="text-3xl font-semibold text-white">Perguntas frequentes</h2>
-              <p className="mt-2 max-w-xl text-sm text-brand-silver/70">
-                Transparência desde o primeiro contato. Fale com nosso time caso queira um diagnóstico guiado.
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#9DB8C6]">
+                GerêncIA • O CRM que pensa e age
               </p>
+              <h1 className="mt-4 text-4xl font-semibold leading-tight text-white md:text-5xl">
+                O CRM que pensa e age
+              </h1>
+              <p className="mt-6 text-base leading-relaxed text-[#C6E3F2] md:text-lg">
+                Conecte o seu WhatsApp e veja o GerêncIA transformar conversas em dados, classificar leads
+                automaticamente e revelar onde o seu dinheiro está sendo perdido.
+              </p>
+              <SectionCTA href="#solucao" label="Quero ver como funciona" />
             </div>
-            <a
-              href="mailto:contato@gerencia.ai"
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-brand-silver transition hover:border-white/20 hover:text-white"
-            >
-              Falar com vendas
-            </a>
+            <div className="relative overflow-hidden rounded-3xl border border-[#00C2FF]/30 bg-[#102746]/80 p-3 shadow-lg shadow-black/30">
+              <img
+                src={dashHero}
+                alt="Tela do dashboard principal do Gerencia"
+                className="h-full w-full rounded-2xl object-cover"
+                loading="lazy"
+              />
+            </div>
           </div>
-          <div className="mt-8 space-y-4">
-            {faq.map((item) => (
-              <div key={item.pergunta} className="rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-5">
-                <p className="text-sm font-semibold text-white">{item.pergunta}</p>
-                <p className="mt-2 text-sm text-brand-silver/80">{item.resposta}</p>
+        </section>
+
+        <section id="dor" className="rounded-3xl border border-[#1B335A] bg-[#0E2447]/80 p-8 shadow-lg shadow-black/25 md:p-12">
+          <div className="grid gap-10">
+            <div>
+              <h2 className="text-3xl font-semibold text-white md:text-4xl">
+                Você sente que está perdendo vendas, mas não sabe onde?
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-[#C6E3F2]">
+                A maioria das empresas não tem clareza sobre o que acontece com seus leads porque o controle depende
+                demais do vendedor.
+              </p>
+              <ul className="mt-8 grid grid-cols-1 gap-4 text-sm text-[#E6E6E6]/90 sm:grid-cols-2">
+                {dorItems.map((item) => (
+                  <li key={item} className="flex items-start gap-3 rounded-2xl bg-white/5 px-4 py-3">
+                    <span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#00C2FF]" aria-hidden />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <SectionCTA href="#solucao" label="Quero sair desse cenário" />
+            </div>
+          </div>
+        </section>
+
+        <section id="solucao" className="rounded-3xl border border-[#1B335A] bg-[#102746]/80 p-8 shadow-lg shadow-black/25 md:p-12">
+          <div className="grid gap-10 md:grid-cols-[0.9fr,1.1fr] md:items-center">
+            <div className="order-2 md:order-1">
+              <h2 className="text-3xl font-semibold text-white md:text-4xl">Um CRM que faz o trabalho sozinho.</h2>
+              <p className="mt-4 text-base leading-relaxed text-[#C6E3F2]">
+                O GerêncIA elimina a dependência do vendedor. Ele se conecta ao WhatsApp, entende as conversas e
+                transforma isso em dados automáticos.
+              </p>
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                {solucaoCards.map((item) => (
+                  <div key={item} className="rounded-2xl border border-[#1F3C68] bg-white/5 p-4 text-sm text-[#E6E6E6]">
+                    {item}
+                  </div>
+                ))}
               </div>
-            ))}
+              <SectionCTA href="#beneficios" label="Quero entender os resultados" />
+            </div>
+            <div className="order-1 md:order-2">
+              <div className="relative overflow-hidden rounded-3xl border border-[#00C2FF]/30 bg-[#102746]/80 p-3 shadow-lg shadow-black/30">
+                <img
+                  src={dashSolution}
+                  alt="Integração do WhatsApp e painel do Gerência"
+                  className="h-full w-full rounded-2xl object-cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="beneficios" className="rounded-3xl border border-[#1B335A] bg-[#0E2447]/80 p-8 shadow-lg shadow-black/25 md:p-12">
+          <div className="grid gap-10 md:grid-cols-[1.1fr,0.9fr] md:items-center">
+            <div>
+              <h2 className="text-3xl font-semibold text-white md:text-4xl">
+                Deixe de operar no escuro e comece a decidir com dados.
+              </h2>
+              <ul className="mt-8 grid grid-cols-1 gap-4 text-sm text-[#E6E6E6]/90 sm:grid-cols-2">
+                {beneficios.map((item) => (
+                  <li key={item} className="flex items-start gap-3 rounded-2xl bg-white/5 px-4 py-3">
+                    <span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#00C2FF]" aria-hidden />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <SectionCTA href="#planos" label="Quero acompanhar com dados reais" />
+            </div>
+            <div className="order-1 md:order-2">
+              <div className="relative overflow-hidden rounded-3xl border border-[#00C2FF]/30 bg-[#102746]/80 p-3 shadow-lg shadow-black/30">
+                <img
+                  src={kanbanImage}
+                  alt="Quadro kanban do Gerência"
+                  className="h-full w-full rounded-2xl object-cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="diferencial" className="rounded-3xl border border-[#1B335A] bg-[#102746]/80 p-8 shadow-lg shadow-black/25 md:p-12">
+          <div className="grid gap-10 lg:grid-cols-[1fr,1fr] lg:items-center">
+            <div>
+              <h2 className="text-3xl font-semibold text-white md:text-4xl">
+                CRMs tradicionais esperam que o vendedor trabalhe. O GerêncIA trabalha no lugar dele.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-[#C6E3F2]">
+                Enquanto outros sistemas dependem de preenchimento manual, o GerêncIA entende o conteúdo das conversas
+                e preenche tudo automaticamente.
+              </p>
+              <SectionCTA href="#planos" label="Quero esse diferencial" />
+            </div>
+            <div className="order-1 md:order-2">
+              <div className="relative overflow-hidden rounded-3xl border border-[#00C2FF]/30 bg-[#102746]/80 p-3 shadow-lg shadow-black/30">
+                <img
+                  src={listaImage}
+                  alt="Comparativo de lista automatizada do Gerência"
+                  className="h-full w-full rounded-2xl object-cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="planos" className="rounded-3xl border border-[#1B335A] bg-[#0E2447]/80 p-8 shadow-lg shadow-black/25 md:p-12">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-semibold text-white md:text-4xl">Escolha o plano certo para o seu ritmo de crescimento</h2>
+            <p className="mt-3 text-sm text-[#C6E3F2]">
+              Todos os planos incluem integração com WhatsApp, classificação automática, rastreamento de valores e dashboard em tempo real.
+            </p>
+          </div>
+          <div className="mt-8 flex justify-center">
+            <div className="inline-flex items-center rounded-full bg-[#102746]/80 p-1 text-xs font-semibold text-[#9DB8C6]">
+              <button
+                type="button"
+                onClick={() => setBillingCycle("mensal")}
+                className={`rounded-full px-4 py-2 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00C2FF] ${
+                  billingCycle === "mensal" ? "bg-white text-[#0C1E3C] shadow-sm shadow-black/10" : "text-[#9DB8C6] hover:text-white"
+                }`}
+                aria-pressed={billingCycle === "mensal"}
+              >
+                Mensal
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingCycle("anual")}
+                className={`rounded-full px-4 py-2 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00C2FF] ${
+                  billingCycle === "anual" ? "bg-white text-[#0C1E3C] shadow-sm shadow-black/10" : "text-[#9DB8C6] hover:text-white"
+                }`}
+                aria-pressed={billingCycle === "anual"}
+              >
+                <span className="flex items-center gap-2">
+                  Anual
+                  <span className="inline-flex items-center rounded-full bg-[#00C2FF]/15 px-2 py-[2px] text-[10px] font-semibold text-[#00C2FF]">
+                    Economize até {economiaMaxima}%
+                  </span>
+                </span>
+              </button>
+            </div>
+          </div>
+          <div className="mt-10 grid gap-6 md:grid-cols-2">
+            {planos.map((plano) => {
+              const precoAtual = billingCycle === "mensal" ? plano.precoMensal : plano.precoAnualMensal;
+              const precoFormatado = `${formatCurrency(precoAtual)}/mês`;
+              const economia = Math.round((1 - plano.precoAnualMensal / plano.precoMensal) * 100);
+              const totalAnualFormatado = formatCurrency(plano.precoAnualMensal * 12);
+              const descricaoCobranca =
+                billingCycle === "mensal"
+                  ? "Cobrança mensal, cancele quando quiser."
+                  : `${totalAnualFormatado} cobrados uma vez ao ano · Economize ${economia}%`;
+              const rotuloCiclo = billingCycle === "mensal" ? "Plano mensal" : "Plano anual";
+
+              return (
+                <article
+                  key={plano.nome}
+                  className={`relative flex h-full flex-col rounded-3xl border bg-[#142E54]/80 p-6 text-left shadow-lg shadow-black/30 transition hover:-translate-y-1 hover:shadow-black/40 ${
+                    plano.destaque ? "border-[#00C2FF] ring-2 ring-[#00C2FF]/60" : "border-[#1F3C68]"
+                  }`}
+                >
+                  {plano.destaque ? (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#00C2FF] px-4 py-1 text-xs font-semibold uppercase tracking-wide text-[#0C1E3C] shadow-md shadow-[#00C2FF]/40">
+                      Mais escolhido
+                    </span>
+                  ) : null}
+                  <h3 className="mt-2 text-2xl font-semibold text-white">{plano.nome}</h3>
+                  <div className="mt-6 flex flex-col gap-3">
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-3xl font-semibold text-white">{precoFormatado}</span>
+                      <span className="text-xs uppercase tracking-wide text-[#9DB8C6]">{rotuloCiclo}</span>
+                    </div>
+                    <p className="text-xs text-[#9DB8C6]">{descricaoCobranca}</p>
+                    {billingCycle === "anual" ? (
+                      <span className="inline-flex w-fit items-center gap-2 rounded-full bg-[#00C2FF]/10 px-3 py-1 text-xs font-semibold text-[#00C2FF]">
+                        Economize {economia}%
+                      </span>
+                    ) : null}
+                  </div>
+                  <ul className="mt-6 space-y-2 text-sm text-[#E6E6E6]/90">
+                    <li>{plano.whatsapp}</li>
+                    <li>{plano.usuarios}</li>
+                    {plano.recursos.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <a
+                    href={`${appUrl}/login`}
+                    className={`mt-auto inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00C2FF] ${
+                      plano.destaque
+                        ? "bg-[#00C2FF] text-[#0C1E3C] hover:bg-[#29d2ff]"
+                        : "bg-white/10 text-white hover:bg-white/20"
+                    }`}
+                  >
+                    {plano.cta}
+                  </a>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section id="encerramento" className="rounded-3xl border border-[#1B335A] bg-[#102746]/80 p-8 shadow-lg shadow-black/25 md:p-12">
+          <div className="grid gap-10">
+            <div>
+              <h2 className="text-3xl font-semibold text-white md:text-4xl">
+                Quando você enxerga seus dados, você enxerga seu crescimento.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-[#C6E3F2]">
+                O GerêncIA foi criado para empresários que querem controle total sobre seus leads sem depender de
+                planilhas ou relatórios manuais.
+              </p>
+              <SectionCTA href={`${appUrl}/login`} label="Quero conhecer o GerêncIA" />
+            </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-white/10 bg-[#060711]/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-6 py-6 text-xs text-brand-silver/70 md:flex-row md:items-center md:justify-between">
-          <span>© {new Date().getFullYear()} GerencIA. Todos os direitos reservados.</span>
+      <footer className="relative z-10 border-t border-[#1F3C68] bg-[#07152C]/90">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-6 text-xs text-[#9DB8C6] md:flex-row md:items-center md:justify-between">
+          <span>© {new Date().getFullYear()} GerêncIA. Todos os direitos reservados.</span>
           <div className="flex flex-wrap gap-4">
-            <a className="transition hover:text-white" href="#">
-              Política de Privacidade
+            <a className="transition hover:text-white" href="#hero">
+              Voltar ao topo
             </a>
-            <a className="transition hover:text-white" href="#">
-              Termos de Uso
-            </a>
-            <a className="transition hover:text-white" href="#">
-              LGPD
+            <a className="transition hover:text-white" href="mailto:contato@crmgerencia.com.br">
+              contato@crmgerencia.com.br
             </a>
           </div>
         </div>
@@ -229,34 +385,23 @@ export const LandingPage = () => {
   );
 };
 
-const ToggleButton = ({ ativo, label, onClick, badge }: { ativo: boolean; label: string; onClick: () => void; badge?: string }) => (
-  <button
-    className={`group relative rounded-full px-6 py-2 text-sm font-medium transition ${
-      ativo ? "bg-white text-brand-navy shadow" : "text-brand-silver/80 hover:text-white"
-    }`}
-    onClick={onClick}
-    type="button"
-  >
-    {label}
-    {badge ? (
-      <span className="absolute -right-4 -top-2 inline-flex items-center rounded-full bg-brand-navy px-2 py-[2px] text-[10px] font-semibold uppercase tracking-widest text-white shadow-sm shadow-brand-navy/40">
-        {badge}
-      </span>
-    ) : null}
-  </button>
-);
-
-const Passo = ({ destaque, descricao }: { destaque: string; descricao: string }) => (
-  <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-5 shadow-sm shadow-black/10">
-    <p className="text-sm font-semibold text-white">{destaque}</p>
-    <p className="mt-2 text-sm text-brand-silver/80">{descricao}</p>
+const BackgroundGlow = () => (
+  <div aria-hidden className="pointer-events-none absolute inset-0">
+    <div className="absolute left-1/2 top-[-180px] h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-[#00C2FF]/20 blur-[160px]" />
+    <div className="absolute bottom-[-200px] right-[-120px] h-[380px] w-[380px] rounded-full bg-[#00C2FF]/15 blur-[160px]" />
+    <div className="absolute bottom-[-240px] left-[-120px] h-[360px] w-[360px] rounded-full bg-[#4D6C8C]/25 blur-[160px]" />
   </div>
 );
 
-const DecoracaoHero = () => (
-  <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-    <div className="absolute -top-24 left-1/2 h-96 w-[620px] -translate-x-1/2 rounded-full bg-brand-navy/45 blur-3xl" />
-    <div className="absolute bottom-[-160px] left-12 h-80 w-80 rounded-full bg-brand-silver/20 blur-3xl" />
-    <div className="absolute bottom-[-120px] right-[-60px] h-[420px] w-[420px] rounded-full bg-brand-navyDark/40 blur-3xl" />
-  </div>
-);
+
+
+
+
+
+
+
+
+
+
+
+
