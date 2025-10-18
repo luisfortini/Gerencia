@@ -22,7 +22,7 @@ export const ForgotPasswordPage = () => {
       const { data } = await api.post<{ message: string }>('/auth/forgot-password', {
         email: email.trim(),
       });
-      setMessage(data.message ?? 'Se o e-mail estiver cadastrado, enviaremos instrucoes para recuperar a senha em instantes.');
+      setMessage(data.message ?? 'Se o e-mail estiver cadastrado, enviaremos instrucões para recuperar a senha em instantes.');
     } catch (err) {
       if (isAxiosError(err)) {
         if (err.code === 'ERR_NETWORK') {
@@ -45,9 +45,9 @@ export const ForgotPasswordPage = () => {
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <img src={logoFull} alt="GerencIA" className="h-10 w-auto" />
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Recuperacao de senha</h1>
+            <h1 className="text-xl font-semibold text-foreground">Recuperação de senha</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Informe o e-mail cadastrado para receber o link de redefinicao.
+              Informe o e-mail cadastrado para receber o link de redefinição.
             </p>
           </div>
         </div>
