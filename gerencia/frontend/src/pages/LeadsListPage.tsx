@@ -1,4 +1,5 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ const statusOptions: { value: LeadStatus | 'todos'; label: string }[] = [
   { value: 'novo', label: 'Novo' },
   { value: 'qualificado', label: 'Qualificado' },
   { value: 'interessado', label: 'Interessado' },
-  { value: 'negociacao', label: 'Negociação' },
+  { value: 'negociação', label: 'Negociação' },
   { value: 'follow_up', label: 'Follow-up' },
   { value: 'ganho', label: 'Ganho' },
   { value: 'perdido', label: 'Perdido' },
@@ -25,7 +26,7 @@ export const LeadsListPage = () => {
   const [status, setStatus] = useState<LeadStatus | 'todos'>('todos');
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
 
-  const { data, isLoading } = useLeads({
+  const { data, isLoading, isFetching, refetch } = useLeads({
     search: search || undefined,
     status: status === 'todos' ? undefined : status,
   });
@@ -39,8 +40,12 @@ export const LeadsListPage = () => {
           <CardTitle>Leads - Lista Inteligente</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-[2fr_1fr_auto]">
-            <Input placeholder="Buscar por nome, e-mail ou telefone" value={search} onChange={(event) => setSearch(event.target.value)} />
+          <div className="grid gap-4 md:grid-cols-[2fr_1fr_auto_auto]">
+            <Input
+              placeholder="Buscar por nome, e-mail ou telefone"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
             <Select value={status} onChange={(event) => setStatus(event.target.value as LeadStatus | 'todos')}>
               {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -50,6 +55,16 @@ export const LeadsListPage = () => {
             </Select>
             <Button variant="outline" onClick={() => setSearch('')}>
               Limpar filtros
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => void refetch()}
+              disabled={isFetching}
+              title="Atualizar lista de leads"
+              aria-label="Atualizar lista de leads"
+            >
+              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
             </Button>
           </div>
         </CardContent>

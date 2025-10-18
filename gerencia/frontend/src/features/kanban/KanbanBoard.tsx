@@ -20,7 +20,7 @@ const statusTitles: Record<LeadStatus, string> = {
   novo: 'Novo',
   qualificado: 'Qualificado',
   interessado: 'Interessado',
-  negociacao: 'Negociacao',
+  negociacao: 'Negociação',
   follow_up: 'Follow-up',
   ganho: 'Ganho',
   perdido: 'Perdido',
@@ -88,7 +88,7 @@ export const KanbanBoard = ({ columns, onChangeStatus, onOpenLead }: KanbanBoard
     const isRetrocesso = statusOrder.indexOf(targetStatus) < statusOrder.indexOf(fromStatus);
     let motivo: string | undefined;
     if (isRetrocesso) {
-      motivo = window.prompt('Informe o motivo para retroceder o lead:', 'Revisao necessaria') ?? undefined;
+      motivo = window.prompt('Informe o motivo para retroceder o lead:', 'Revisão necessária') ?? undefined;
       if (!motivo) {
         return;
       }
@@ -180,7 +180,7 @@ export const KanbanBoard = ({ columns, onChangeStatus, onOpenLead }: KanbanBoard
           if (!open) setPending(null);
         }}
         title="Registrar lead como ganho"
-        description="Informe o valor total da negociacao para concluir o ganho."
+        description="Informe o valor total da negociação para concluir o ganho."
         footer={
           <>
             <Button variant="outline" onClick={() => setPending(null)}>
@@ -274,7 +274,7 @@ const KanbanCard = ({ lead, status, onMove, onOpenLead }: KanbanCardProps) => {
   const valorNegociado = valorNumerico !== null ? formatCurrency(valorNumerico) : null;
   const responsavelLabel =
     lead.responsavel?.usr_nome ??
-    (lead.led_responsavel_usrid ? `Usuario #${lead.led_responsavel_usrid}` : 'Nao atribuido');
+    (lead.led_responsavel_usrid ? `Usuário #${lead.led_responsavel_usrid}` : 'Não atribuído');
 
   const stopPropagation = (event: PointerEvent | MouseEvent) => {
     event.stopPropagation();
@@ -292,9 +292,9 @@ const KanbanCard = ({ lead, status, onMove, onOpenLead }: KanbanCardProps) => {
         <h3 className="text-sm font-semibold text-foreground">{lead.led_nome}</h3>
         <StatusBadge status={status} />
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">Confianca IA: {Math.round((lead.led_status_conf ?? 0) * 100)}%</p>
-      <p className="mt-1 text-xs text-muted-foreground">Valor negociado: {valorNegociado ?? 'Nao informado'}</p>
-      <p className="mt-1 text-xs text-muted-foreground">Responsavel: {responsavelLabel}</p>
+      <p className="mt-2 text-xs text-muted-foreground">Confiança IA: {Math.round((lead.led_status_conf ?? 0) * 100)}%</p>
+      <p className="mt-1 text-xs text-muted-foreground">Valor negociado: {valorNegociado ?? 'Não informado'}</p>
+      <p className="mt-1 text-xs text-muted-foreground">Responsável: {responsavelLabel}</p>
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
         <Button
           size="sm"

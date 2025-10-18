@@ -18,7 +18,7 @@ export const useLeadAssignment = () => {
         predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'leads',
       });
       queryClient.invalidateQueries({ queryKey: ['leads-kanban'] });
-      queryClient.invalidateQueries({ queryKey: ['conta-usuarios'] });
+      queryClient.invalidateQueries({ queryKey: ['conta-usuários'] });
     },
   });
 };

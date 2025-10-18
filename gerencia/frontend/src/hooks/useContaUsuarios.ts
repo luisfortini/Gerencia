@@ -4,10 +4,10 @@ import type { UsuarioOption } from '@/types';
 
 export const useContaUsuarios = (options?: { enabled?: boolean }) =>
   useQuery({
-    queryKey: ['conta-usuarios'],
+    queryKey: ['conta-usuários'],
     enabled: options?.enabled ?? true,
     queryFn: async () => {
-      const { data } = await api.get<UsuarioOption[]>('/usuarios/opcoes');
+      const { data } = await api.get<UsuarioOption[]>('/usuários/opções');
       return data;
     },
   });

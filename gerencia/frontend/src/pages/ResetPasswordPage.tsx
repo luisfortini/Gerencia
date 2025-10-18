@@ -43,8 +43,8 @@ export const ResetPasswordPage = () => {
       }, 2500);
     } catch (err) {
       if (isAxiosError(err)) {
-        const feedback = err.response?.data?.message ?? 'Nao foi possivel redefinir a senha.';
-        setError(typeof feedback === 'string' ? feedback : 'Nao foi possivel redefinir a senha.');
+        const feedback = err.response?.data?.message ?? 'Não foi possível redefinir a senha.';
+        setError(typeof feedback === 'string' ? feedback : 'Não foi possível redefinir a senha.');
       } else {
         setError('Ocorreu um erro inesperado. Tente novamente.');
       }

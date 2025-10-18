@@ -1,8 +1,8 @@
-ï»¿export type LeadStatus =
+export type LeadStatus =
   | "novo"
   | "qualificado"
   | "interessado"
-  | "negociacao"
+  | "negociação"
   | "follow_up"
   | "ganho"
   | "perdido";
@@ -111,6 +111,11 @@ export interface EvolutionConfig {
   api_key?: string | null;
   verify_ssl: boolean;
   default_verify_ssl: boolean;
+}
+
+export interface DashboardSettings {
+  metaPrimeiraRespostaMin: number;
+  defaultMetaPrimeiraRespostaMin: number;
 }
 
 export interface Usuario {

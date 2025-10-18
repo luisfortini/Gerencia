@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type { EvolutionQrCode, InstanciaWhatsapp } from "@/types";
+import type { DashboardSettings, EvolutionQrCode, InstanciaWhatsapp } from "@/types";
 
 type EvolutionConnectResponse = {
   instance?: {
@@ -95,6 +95,42 @@ export const useDeleteInstancia = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["instancias"] });
+    },
+  });
+};
+
+type RawDashboardSettings = {
+  meta_primeira_resposta_min: number;
+  default_meta_primeira_resposta_min: number;
+};
+
+const normalizeDashboardSettings = (data: RawDashboardSettings): DashboardSettings => ({
+  metaPrimeiraRespostaMin: data.meta_primeira_resposta_min,
+  defaultMetaPrimeiraRespostaMin: data.default_meta_primeira_resposta_min,
+});
+
+export const useDashboardSettings = () =>
+  useQuery({
+    queryKey: ["dashboard-settings"],
+    queryFn: async () => {
+      const { data } = await api.get<RawDashboardSettings>("/settings/dashboard");
+      return normalizeDashboardSettings(data);
+    },
+  });
+
+export const useUpdateDashboardSettings = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: { metaPrimeiraRespostaMin: number }) => {
+      const { data } = await api.put<RawDashboardSettings>("/settings/dashboard", {
+        meta_primeira_resposta_min: payload.metaPrimeiraRespostaMin,
+      });
+
+      return normalizeDashboardSettings(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dashboard-settings"] });
     },
   });
 };
