@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useKanbanLeads } from '@/hooks/useKanbanLeads';
 import { KanbanBoard } from '@/features/kanban/KanbanBoard';
 import type { Lead, LeadStatus } from '@/types';
@@ -67,4 +67,3 @@ export const LeadsKanbanPage = () => {
     </div>
   );
 };
-

@@ -1,4 +1,4 @@
-﻿import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 import type { LeadStatus } from '@/types';
 
 const statusColor: Record<LeadStatus, 'default' | 'success' | 'warning' | 'destructive' | 'outline'> = {

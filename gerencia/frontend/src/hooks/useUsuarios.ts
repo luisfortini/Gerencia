@@ -18,9 +18,9 @@ export type UsuarioUpdatePayload = Partial<Omit<UsuarioCreatePayload, 'usr_senha
 
 export const useUsuarios = (options?: { enabled?: boolean }) =>
   useQuery({
-    queryKey: ['usuarios'],
+    queryKey: ['usuários'],
     queryFn: async () => {
-      const { data } = await api.get<UsuariosResponse>('/usuarios');
+      const { data } = await api.get<UsuariosResponse>('/usuários');
       return data;
     },
     enabled: options?.enabled ?? true,
@@ -31,11 +31,11 @@ export const useCreateUsuario = () => {
 
   return useMutation({
     mutationFn: async (payload: UsuarioCreatePayload) => {
-      const { data } = await api.post<Usuario>('/usuarios', payload);
+      const { data } = await api.post<Usuario>('/usuários', payload);
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      queryClient.invalidateQueries({ queryKey: ['usuários'] });
     },
   });
 };
@@ -49,7 +49,7 @@ export const useUpdateUsuario = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      queryClient.invalidateQueries({ queryKey: ['usuários'] });
     },
   });
 };
@@ -62,7 +62,7 @@ export const useDeleteUsuario = () => {
       await api.delete(`/usuarios/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      queryClient.invalidateQueries({ queryKey: ['usuários'] });
     },
   });
 };

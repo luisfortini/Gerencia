@@ -1,11 +1,11 @@
-﻿import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { KanbanBoard } from '@/features/kanban/KanbanBoard';
 import type { Lead, LeadStatus } from '@/types';
 
 const lead: Lead = {
   led_id: 42,
   led_nome: 'Cliente Teste',
-  led_status: 'negociacao',
+  led_status: 'negocicao',
   led_status_conf: 0.88,
 };
 

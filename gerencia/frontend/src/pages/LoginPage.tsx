@@ -1,4 +1,4 @@
-﻿import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { Link, Location, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -46,7 +46,7 @@ const parseLoginResponse = (raw: LoginResponse | string): LoginResponse | null =
     }
 
     if (!parsed) {
-      console.warn("Resposta de login inesperada; nao foi possivel interpretar JSON.", sanitized);
+      console.warn("Resposta de login inesperada; n�o foi poss�vel interpretar JSON.", sanitized);
     }
 
     return parsed;
@@ -67,13 +67,13 @@ const parseStoredUser = (value: string | null) => {
   try {
     return JSON.parse(value) as { superadmin?: boolean; admin?: boolean };
   } catch (error) {
-    console.warn("Nao foi possivel interpretar os dados armazenados do usuario.", error);
+    console.warn("N�o foi poss�vel interpretar os dados armazenados do usu�rio.", error);
     return null;
   }
 };
 
 const destaqueItens = [
-  "Atualizacao automatica de status por IA proprietaria",
+  "Atualiza��o automatica de status por IA proprietaria",
   "Painel gestor com funil em tempo real",
   "Deteccao de objecoes e valores negociados nas conversas",
 ];
@@ -104,7 +104,7 @@ export const LoginPage = () => {
       const parsedResponse = parseLoginResponse(data as LoginResponse | string);
 
       if (!parsedResponse?.token) {
-        setError("Nao foi possivel validar a resposta do servidor. Tente novamente em instantes.");
+        setError("Não foi possível validar a resposta do servidor. Tente novamente em instantes.");
         localStorage.removeItem("gerencia_conta");
         localStorage.removeItem("gerencia_usuario");
         return;
@@ -115,7 +115,7 @@ export const LoginPage = () => {
       const usuario = parsedResponse.usuario;
 
       if (!usuario) {
-        setError("Nao foi possivel carregar os dados do usuario. Tente novamente em instantes.");
+        setError("Não foi possível carregar os dados do usuário. Tente novamente em instantes.");
         localStorage.removeItem("gerencia_conta");
         localStorage.removeItem("gerencia_usuario");
         return;
@@ -137,7 +137,7 @@ export const LoginPage = () => {
         if (err.response?.status === 401) {
           setError("Credenciais invalidas. Verifique o e-mail e a senha informados.");
         } else {
-          setError("Nao foi possivel realizar o login. Tente novamente em instantes.");
+          setError("Não foi possível realizar o login. Tente novamente em instantes.");
         }
       } else {
         setError("Ocorreu um erro inesperado. Tente novamente.");
@@ -201,7 +201,7 @@ export const LoginPage = () => {
           </ul>
         </div>
         <div className="relative z-10 flex items-center justify-between text-xs text-muted-foreground">
-          <span>&copy; {new Date().getFullYear()} GerencIA - Inteligencia aplicada ao relacionamento com clientes.</span>
+          <span>&copy; {new Date().getFullYear()} GerêncIA - Inteligencia aplicada ao relacionamento com clientes.</span>
         </div>
       </div>
       <div className="flex w-full max-w-lg flex-col justify-center px-6 py-12 sm:mx-auto">

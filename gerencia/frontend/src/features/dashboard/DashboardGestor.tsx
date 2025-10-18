@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -79,6 +79,7 @@ export type DashboardResponse = {
     perdidos: number;
     taxaConversao: number;
     valorNegociadoTotal: number;
+    valorGanhoTotal: number;
     ticketMedio: number;
     tempoMedioPrimeiraRespostaMin: number | null;
   };
@@ -95,14 +96,14 @@ const STATUS_STYLES: Record<string, { badge: string; dot: string }> = {
   Qualificando: { badge: 'bg-sky-100 text-sky-800', dot: 'bg-sky-500' },
   Interessado: { badge: 'bg-indigo-100 text-indigo-800', dot: 'bg-indigo-500' },
   'Proposta Enviada': { badge: 'bg-amber-100 text-amber-800', dot: 'bg-amber-500' },
-  Negociacao: { badge: 'bg-violet-100 text-violet-800', dot: 'bg-violet-500' },
+  Negociação: { badge: 'bg-violet-100 text-violet-800', dot: 'bg-violet-500' },
   Ganho: { badge: 'bg-emerald-100 text-emerald-800', dot: 'bg-emerald-500' },
   Perdido: { badge: 'bg-rose-100 text-rose-800', dot: 'bg-rose-500' },
   'Follow-up Futuro': { badge: 'bg-muted/60 text-foreground', dot: 'bg-accent' },
 };
 
 const WHATSAPP_OPTIONS: Array<{ value: DashboardWhatsapp; label: string }> = [
-  { value: 'all', label: 'Todas as instancias' },
+  { value: 'all', label: 'Todas as instâncias' },
 ];
 
 const PERIOD_OPTIONS: Array<{ value: DashboardPeriod; label: string }> = [
@@ -134,7 +135,7 @@ const normalizeDashboardResponse = (raw: DashboardResponse | string): DashboardR
     }
 
     if (!parsed) {
-      console.warn('Resposta de dashboard inesperada; nao foi possivel interpretar JSON.', sanitized);
+      console.warn('Resposta de dashboard inesperada; não foi possível interpretar JSON.', sanitized);
       return null;
     }
 
@@ -232,7 +233,7 @@ const DashboardGestor = () => {
     const parsedId = Number(leadIdentifier);
 
     if (Number.isNaN(parsedId)) {
-      console.warn('ID de lead invalido recebido no dashboard:', leadIdentifier);
+      console.warn('ID de lead inválido recebido no dashboard:', leadIdentifier);
       return;
     }
 
@@ -261,11 +262,11 @@ const DashboardGestor = () => {
       return [];
     }
 
-    return [
-      {
-        icon: Users,
-        label: 'Leads no periodo',
-        value: data.kpis.leadsNoPeriodo,
+  return [
+    {
+      icon: Users,
+      label: 'Leads no periodo',
+      value: data.kpis.leadsNoPeriodo,
         hint: `Total monitorado: ${formatNumber(data.kpis.totalLeads)}`,
         trendIcon: TrendingUp,
       },
@@ -283,15 +284,23 @@ const DashboardGestor = () => {
         hint: 'Leads marcados como perdidos.',
         trendIcon: TrendingDown,
       },
-      {
-        icon: Receipt,
-        label: 'Valor negociado',
-        value: data.kpis.valorNegociadoTotal,
-        hint: `Ticket medio ${formatCurrency(data.kpis.ticketMedio)}`,
-        isCurrency: true,
-        trendIcon: Info,
-      },
-    ];
+    {
+      icon: Receipt,
+      label: 'Valor negociado',
+      value: data.kpis.valorNegociadoTotal,
+      hint: 'Valores previstos em todas as oportunidades.',
+      isCurrency: true,
+      trendIcon: Info,
+    },
+    {
+      icon: TrendingUp,
+      label: 'Valor ganho',
+      value: data.kpis.valorGanhoTotal,
+      hint: `Ticket medio ${formatCurrency(data.kpis.ticketMedio)}`,
+      isCurrency: true,
+      trendIcon: Info,
+    },
+  ];
   }, [data]);
 
   return (
@@ -299,7 +308,7 @@ const DashboardGestor = () => {
       <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Visao Geral — GerencIA</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Visao Geral | GerêncIA</h1>
           <p className="text-sm text-muted-foreground">
             Panorama consolidado da performance comercial com dados assistidos por IA.
           </p>
@@ -363,7 +372,7 @@ const DashboardGestor = () => {
         </Card>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {isLoading && !data
           ? Array.from({ length: 4 }).map((_, index) => (
               <Card key={index} className="animate-pulse border-dashed">
@@ -398,7 +407,7 @@ const DashboardGestor = () => {
       <div className="grid gap-4 xl:grid-cols-[2fr,1fr]">
         <Card className="h-full">
           <CardHeader>
-            <CardTitle>Evolucao diaria</CardTitle>
+            <CardTitle>Evolução diaária</CardTitle>
             <CardDescription>Volume de novos leads, ganhos e perdidos por dia.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -423,7 +432,7 @@ const DashboardGestor = () => {
               </ResponsiveContainer>
             </div>
             <p className="text-xs text-muted-foreground">
-              Visualize o ritmo diario de novos contatos e o desfecho de cada negociacao.
+              Visualize o ritmo diario de novos contatos e o desfecho de cada negociação.
             </p>
           </CardContent>
         </Card>
@@ -432,7 +441,7 @@ const DashboardGestor = () => {
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-primary" /> SLA primeira resposta
             </CardTitle>
-            <CardDescription>Tempo medio versus meta definida para o time.</CardDescription>
+            <CardDescription>Tempo medio vs meta definida para o time.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -462,7 +471,7 @@ const DashboardGestor = () => {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              Acompanhe o tempo de resposta desde o primeiro contato ate a primeira interacao do time.
+              Acompanhe o tempo de resposta desde o primeiro contato até a primeira interacao do time.
             </p>
           </CardContent>
         </Card>
@@ -491,7 +500,7 @@ const DashboardGestor = () => {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Distribuicao por status</CardTitle>
+            <CardTitle>Distribuição por status</CardTitle>
             <CardDescription>Status atuais dos leads monitorados.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -517,7 +526,7 @@ const DashboardGestor = () => {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Top objecoes</CardTitle>
+            <CardTitle>Top objecões</CardTitle>
             <CardDescription>Principais impeditivos identificados.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -539,7 +548,7 @@ const DashboardGestor = () => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <p className="text-xs text-muted-foreground">Oriente campanhas de follow-up focando nas objecoes frequentes.</p>
+            <p className="text-xs text-muted-foreground">Oriente campanhas de follow-up focando nas objecões frequentes.</p>
           </CardContent>
         </Card>
       </div>
@@ -549,7 +558,7 @@ const DashboardGestor = () => {
           <CardTitle className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-amber-500" /> Alertas do funil
           </CardTitle>
-          <CardDescription>Leads que exigem acao imediata para evitar perda de oportunidade.</CardDescription>
+          <CardDescription>Leads que exigem ação imediata para evitar perda de oportunidade.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -560,7 +569,7 @@ const DashboardGestor = () => {
                 <TableHeaderCell>Status</TableHeaderCell>
                 <TableHeaderCell>Motivo</TableHeaderCell>
                 <TableHeaderCell>Atraso</TableHeaderCell>
-                <TableHeaderCell>Acoes</TableHeaderCell>
+                <TableHeaderCell>Ações</TableHeaderCell>
               </TableRow>
             </TableHead>
             <TableBody>

@@ -16,13 +16,15 @@ jest.mock('@/hooks/useInstancias', () => ({
 }));
 
 describe('InstanciasPage', () => {
-  beforeEach(() => {\n    process.env.VITE_INSTANCIAS_LIMITE = '3';\n    window.localStorage.setItem('gerencia_usuario', JSON.stringify({ admin: true }));\n  });
+  beforeEach(() => {
+    process.env.VITE_INSTANCIAS_LIMITE = '3';
+    window.localStorage.setItem('gerencia_usuario', JSON.stringify({ admin: true }));
+  });
 
-  it('desabilita criaÁ„o ao atingir limite', () => {
+  it('desabilita cria√ß√£o ao atingir limite', () => {
     render(<InstanciasPage />);
 
-    const button = screen.getByRole('button', { name: /Limite de inst‚ncias atingido/i });
+    const button = screen.getByRole('button', { name: /Limite de inst√¢ncias atingido/i });
     expect(button).toBeDisabled();
   });
 });
-

@@ -8,6 +8,7 @@ use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\ObjecaoController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\ContaSettingsController;
 use App\Http\Controllers\Webhook\EvolutionWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -43,6 +44,8 @@ Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
         Route::post('instancias/{instancia}/webhook/sync', [InstanciaWhatsappController::class, 'syncWebhook']);
         Route::post('instancias/{instancia}/refresh', [InstanciaWhatsappController::class, 'refresh']);
         Route::post('instancias/{instancia}/test', [InstanciaWhatsappController::class, 'testConnection']);
+        Route::get('settings/dashboard', [ContaSettingsController::class, 'showDashboardMeta']);
+        Route::put('settings/dashboard', [ContaSettingsController::class, 'updateDashboardMeta']);
     });
 
     Route::get('objecoes', [ObjecaoController::class, 'index']);

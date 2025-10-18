@@ -26,10 +26,10 @@ export const ForgotPasswordPage = () => {
     } catch (err) {
       if (isAxiosError(err)) {
         if (err.code === 'ERR_NETWORK') {
-          setError('Nao foi possivel conectar ao servidor. Verifique sua conexao ou tente novamente em instantes.');
+          setError('Não foi possível conectar ao servidor. Verifique sua conexão ou tente novamente em instantes.');
         } else {
-          const feedback = err.response?.data?.message ?? 'Nao foi possivel iniciar a recuperacao de senha.';
-          setError(typeof feedback === 'string' ? feedback : 'Nao foi possivel iniciar a recuperacao de senha.');
+          const feedback = err.response?.data?.message ?? 'Não foi possível iniciar a recuperação de senha.';
+          setError(typeof feedback === 'string' ? feedback : 'Não foi possível iniciar a recuperação de senha.');
         }
       } else {
         setError('Ocorreu um erro inesperado. Tente novamente em instantes.');

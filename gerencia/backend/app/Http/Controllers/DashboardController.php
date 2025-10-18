@@ -5,6 +5,7 @@ use App\Enums\LeadStatus;
 use App\Models\AuditoriaIa;
 use App\Models\Lead;
 use App\Models\LogStatusLead;
+use App\Services\SystemSettingService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -13,6 +14,11 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private readonly SystemSettingService $settings,
+    ) {
+    }
+
     public function __invoke(Request $request): JsonResponse
     {
         $conta = $request->attributes->get('tenant');
@@ -36,11 +42,13 @@ class DashboardController extends Controller
         $ganhos = $this->countStatusChanges('ganho', $conta->cta_id, $whatsappId, $search, $startDate);
         $perdidos = $this->countStatusChanges('perdido', $conta->cta_id, $whatsappId, $search, $startDate);
 
-        $valorNegociadoTotal = (clone $leadQuery)
+        $valorNegociadoTotal = (clone $leadQuery)->sum('led_valor_total');
+
+        $valorGanhoTotal = (clone $leadQuery)
             ->where('led_status', LeadStatus::GANHO->value)
             ->sum('led_valor_total');
 
-        $ticketMedio = $ganhos > 0 ? round($valorNegociadoTotal / $ganhos) : 0;
+        $ticketMedio = $ganhos > 0 ? round($valorGanhoTotal / $ganhos) : 0;
         $taxaConversao = ($ganhos + $perdidos) > 0 ? round($ganhos / ($ganhos + $perdidos) * 100, 1) : 0.0;
         $tempoMedioPrimeiraResposta = $this->calcularTempoMedioPrimeiraResposta($conta->cta_id, $whatsappId, $search, $startDate);
 
@@ -49,6 +57,7 @@ class DashboardController extends Controller
         $funil = $this->buildFunil($leadQuery);
         $objecoes = $this->buildTopObjecoes($conta->cta_id, $whatsappId, $search, $startDate);
         $alertas = $this->buildAlertas($leadQuery);
+        $metaPrimeiraRespostaMin = $this->resolveMetaPrimeiraResposta((int) $conta->cta_id);
 
         return response()->json([
             'kpis' => [
@@ -58,6 +67,7 @@ class DashboardController extends Controller
                 'perdidos' => $perdidos,
                 'taxaConversao' => $taxaConversao,
                 'valorNegociadoTotal' => (float) $valorNegociadoTotal,
+                'valorGanhoTotal' => (float) $valorGanhoTotal,
                 'ticketMedio' => (float) $ticketMedio,
                 'tempoMedioPrimeiraRespostaMin' => $tempoMedioPrimeiraResposta,
             ],
@@ -67,7 +77,7 @@ class DashboardController extends Controller
             'funil' => $funil,
             'metas' => [
                 'metaConversao' => 35,
-                'metaPrimeiraRespostaMin' => 25,
+                'metaPrimeiraRespostaMin' => $metaPrimeiraRespostaMin,
             ],
             'alertas' => $alertas,
         ]);
@@ -179,7 +189,7 @@ class DashboardController extends Controller
             'qualificado' => 'Qualificando',
             'interessado' => 'Interessado',
             'proposta_enviada' => 'Proposta Enviada',
-            'negociacao' => 'Negociacao',
+            'negociacao' => 'Negociação',
             'ganho' => 'Ganho',
             'perdido' => 'Perdido',
             'follow_up' => 'Follow-up Futuro',
@@ -207,7 +217,7 @@ class DashboardController extends Controller
             'Descoberta' => ['novo'],
             'Qualificacao' => ['qualificado'],
             'Demonstracao' => ['interessado'],
-            'Negociacao' => ['negociacao'],
+            'Negociação' => ['negociacao'],
             'Fechamento' => ['ganho'],
         ];
 
@@ -279,7 +289,7 @@ class DashboardController extends Controller
                 'lead' => $lead->led_nome ?? 'Lead ' . $lead->led_id,
                 'telefone' => $lead->led_telefone ?? '',
                 'status' => $label,
-                'motivo' => $minutos ? 'Sem resposta ha ' . max(1, intdiv($minutos, 60)) . 'h' : 'Sem atualizacao recente',
+                'motivo' => $minutos ? 'Sem resposta há ' . max(1, intdiv($minutos, 60)) . 'h' : 'Sem atualizacao recente',
                 'atrasoMin' => $minutos ?? 0,
             ];
         })->values()->all();
@@ -337,12 +347,48 @@ class DashboardController extends Controller
             'qualificado' => 'Qualificando',
             'interessado' => 'Interessado',
             'proposta_enviada' => 'Proposta Enviada',
-            'negociacao' => 'Negociacao',
+            'negociacao' => 'Negociação',
             'ganho' => 'Ganho',
             'perdido' => 'Perdido',
             'follow_up' => 'Follow-up Futuro',
             default => ucfirst((string) $status),
         };
+    }
+
+    private function resolveMetaPrimeiraResposta(int $contaId): int
+    {
+        $default = $this->resolveDefaultMetaPrimeiraResposta();
+        $stored = $this->settings->get($this->contaMetaKey($contaId));
+
+        return $this->normalizeMetaValue($stored, $default);
+    }
+
+    private function resolveDefaultMetaPrimeiraResposta(): int
+    {
+        $fallback = 25;
+        $stored = $this->settings->get('dashboard_meta_primeira_resposta_min');
+
+        return $this->normalizeMetaValue($stored, $fallback);
+    }
+
+    private function normalizeMetaValue(mixed $value, int $fallback): int
+    {
+        if (is_array($value)) {
+            $value = $value['meta_primeira_resposta_min'] ?? null;
+        }
+
+        if (is_numeric($value)) {
+            $int = (int) $value;
+
+            return max(1, min(1440, $int));
+        }
+
+        return $fallback;
+    }
+
+    private function contaMetaKey(int $contaId): string
+    {
+        return "conta:{$contaId}:dashboard_meta_primeira_resposta_min";
     }
 }
 

@@ -1,4 +1,4 @@
-﻿import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import * as DashboardModule from '@/features/dashboard/DashboardGestor';
 
 jest.mock('recharts', () => ({
@@ -22,10 +22,12 @@ describe('DashboardGestor', () => {
     const mockData: DashboardModule.DashboardResponse = {
       kpis: {
         totalLeads: 150,
+        leadsNoPeriodo: 70,
         ganhos: 60,
         perdidos: 30,
         taxaConversao: 66.7,
         valorNegociadoTotal: 350000,
+        valorGanhoTotal: 210000,
         ticketMedio: 5800,
         tempoMedioPrimeiraRespostaMin: 24,
       },
@@ -37,7 +39,7 @@ describe('DashboardGestor', () => {
         { status: 'Perdido', count: 5 },
         { status: 'Interessado', count: 12 },
         { status: 'Proposta Enviada', count: 10 },
-        { status: 'Negociacao', count: 8 },
+        { status: 'Negociação', count: 8 },
         { status: 'Follow-up Futuro', count: 6 },
       ],
       objecoes: [
@@ -69,7 +71,7 @@ describe('DashboardGestor', () => {
     render(<DashboardModule.default />);
 
     await waitFor(() => {
-      expect(screen.getByText('Visao Geral — GerencIA')).toBeInTheDocument();
+      expect(screen.getByText('Visao Geral | GerêncIA')).toBeInTheDocument();
       expect(screen.getByText('Leads no periodo')).toBeInTheDocument();
       expect(screen.getByText('Alertas do funil')).toBeInTheDocument();
     });

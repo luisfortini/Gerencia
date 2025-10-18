@@ -1,4 +1,4 @@
-﻿import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
 import type { Lead } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,10 @@ export const LeadsTable = ({ leads, onOpenLead }: LeadsTableProps) => {
         <TableRow>
           <TableHeaderCell>Lead</TableHeaderCell>
           <TableHeaderCell>Status</TableHeaderCell>
-          <TableHeaderCell>Confianca</TableHeaderCell>
+          <TableHeaderCell>Confiança</TableHeaderCell>
           <TableHeaderCell>Valor negociado</TableHeaderCell>
-          <TableHeaderCell>Responsavel</TableHeaderCell>
-          <TableHeaderCell>Acoes</TableHeaderCell>
+          <TableHeaderCell>Responsável</TableHeaderCell>
+          <TableHeaderCell>Ações</TableHeaderCell>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -30,11 +30,11 @@ export const LeadsTable = ({ leads, onOpenLead }: LeadsTableProps) => {
           const valorNumerico = rawValor !== null && rawValor !== undefined ? Number(rawValor) : null;
           const valorFormatado = valorNumerico !== null && Number.isFinite(valorNumerico)
             ? formatCurrency(valorNumerico)
-            : 'Nao informado';
+            : 'N�o informado';
 
           const responsavelLabel =
             lead.responsavel?.usr_nome ??
-            (lead.led_responsavel_usrid ? `Usuario #${lead.led_responsavel_usrid}` : 'Nao atribuido');
+            (lead.led_responsavel_usrid ? `Usuário #${lead.led_responsavel_usrid}` : 'Não atribuído');
 
           return (
             <TableRow key={lead.led_id}>
