@@ -46,7 +46,7 @@ const parseLoginResponse = (raw: LoginResponse | string): LoginResponse | null =
     }
 
     if (!parsed) {
-      console.warn("Resposta de login inesperada; n�o foi poss�vel interpretar JSON.", sanitized);
+      console.warn("Resposta de login inesperada; não foi possível interpretar JSON.", sanitized);
     }
 
     return parsed;
@@ -67,15 +67,15 @@ const parseStoredUser = (value: string | null) => {
   try {
     return JSON.parse(value) as { superadmin?: boolean; admin?: boolean };
   } catch (error) {
-    console.warn("N�o foi poss�vel interpretar os dados armazenados do usu�rio.", error);
+    console.warn("Não foi possível interpretar os dados armazenados do usuário.", error);
     return null;
   }
 };
 
 const destaqueItens = [
-  "Atualiza��o automatica de status por IA proprietaria",
+  "Atualização automática de status por IA proprietária",
   "Painel gestor com funil em tempo real",
-  "Deteccao de objecoes e valores negociados nas conversas",
+  "Detecção de objeções e valores negociados nas conversas",
 ];
 
 export const LoginPage = () => {
@@ -185,10 +185,10 @@ export const LoginPage = () => {
         <div className="relative z-10 mt-16 max-w-xl space-y-8">
           <div className="space-y-5">
             <h1 className="text-3xl font-semibold leading-snug text-foreground dark:text-white">
-              Centralize conversas, entenda objecoes e mantenha o funil sempre atualizado.
+              Centralize conversas, entenda objeções e mantenha o funil sempre atualizado.
             </h1>
             <p className="text-sm text-muted-foreground dark:text-muted-foreground/75">
-              O GerencIA interpreta o contexto das mensagens, sugere o proximo passo e da visibilidade aos gestores sobre cada oportunidade.
+              O GerêncIA interpreta o contexto das mensagens, sugere o próximo passo e da visibilidade aos gestores sobre cada oportunidade.
             </p>
           </div>
           <ul className="space-y-3 text-sm text-muted-foreground dark:text-muted-foreground/70">
