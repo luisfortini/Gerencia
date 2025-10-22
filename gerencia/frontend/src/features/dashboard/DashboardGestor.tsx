@@ -407,7 +407,7 @@ const DashboardGestor = () => {
       <div className="grid gap-4 xl:grid-cols-[2fr,1fr]">
         <Card className="h-full">
           <CardHeader>
-            <CardTitle>Evolução diaária</CardTitle>
+            <CardTitle>Evolução diária</CardTitle>
             <CardDescription>Volume de novos leads, ganhos e perdidos por dia.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
