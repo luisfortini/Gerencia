@@ -92,6 +92,7 @@ class EvolutionWebhookController extends Controller
         $mimetype = null;
         $sha256 = null;
         $tamanho = null;
+        $mediaKey = null;
 
         if ($isText) {
             $conteudo = data_get($v, 'data.message.conversation')
@@ -104,6 +105,7 @@ class EvolutionWebhookController extends Controller
             $mimetype = data_get($v, 'data.message.audioMessage.mimetype');
             $sha256 = data_get($v, 'data.message.audioMessage.fileSha256');
             $tamanho = (int)data_get($v, 'data.message.audioMessage.fileLength');
+            $mediaKey = data_get($v, 'data.message.audioMessage.mediaKey');
         } elseif ($isImage) {
             $conteudo = data_get($v, 'data.message.imageMessage.caption') ?: 'Imagem';
             $tipoMidia = 'imagem';
@@ -111,6 +113,7 @@ class EvolutionWebhookController extends Controller
             $mimetype = data_get($v, 'data.message.imageMessage.mimetype');
             $sha256 = data_get($v, 'data.message.imageMessage.fileSha256');
             $tamanho = (int)data_get($v, 'data.message.imageMessage.fileLength');
+            $mediaKey = data_get($v, 'data.message.imageMessage.mediaKey');
         } else {
             $conteudo = 'Outro';
         }
@@ -188,7 +191,22 @@ class EvolutionWebhookController extends Controller
 
                     $tipoMidiaSlug = $tipoMidia ?: 'midia';
                     $caminhoLocal = "whatsapp/{$mensagem->msg_id}_{$tipoMidiaSlug}.{$ext}";
-                    Storage::disk('public')->put($caminhoLocal, $response->body());
+                    $conteudoArquivo = $response->body();
+                    $infoChave = $this->resolverInfoChaveMidia($msgType, $tipoMidia, $mimetypeDownload);
+                    $conteudoDescriptografado = $this->descriptografarMidiaWhatsapp($conteudoArquivo, $mediaKey, $infoChave);
+
+                    if ($conteudoDescriptografado === null && $mediaKey) {
+                        Log::warning('Falha ao descriptografar midia WhatsApp', [
+                            'msg_id'    => $mensagem->msg_id,
+                            'tipo'      => $tipoMidia,
+                            'msg_type'  => $msgType,
+                        ]);
+                    }
+
+                    Storage::disk('public')->put(
+                        $caminhoLocal,
+                        $conteudoDescriptografado ?? $conteudoArquivo
+                    );
                 }
             } catch (\Throwable $e) {
                 Log::warning('Falha ao baixar mídia WhatsApp', ['erro' => $e->getMessage()]);
@@ -213,5 +231,64 @@ class EvolutionWebhookController extends Controller
         }
 
         return response()->json(['status' => 'ok']);
+    }
+
+    private function resolverInfoChaveMidia(?string $msgType, ?string $tipoMidia, ?string $mimetype): ?string
+    {
+        return match (true) {
+            in_array($msgType, ['audioMessage', 'pttMessage'], true),
+            $tipoMidia === 'audio',
+            str_contains((string) $mimetype, 'audio/') => 'WhatsApp Audio Keys',
+
+            in_array($msgType, ['videoMessage'], true),
+            $tipoMidia === 'video',
+            str_contains((string) $mimetype, 'video/') => 'WhatsApp Video Keys',
+
+            in_array($msgType, ['documentMessage'], true),
+            str_contains((string) $mimetype, 'application/') => 'WhatsApp Document Keys',
+
+            in_array($msgType, ['imageMessage', 'stickerMessage'], true),
+            $tipoMidia === 'imagem',
+            str_contains((string) $mimetype, 'image/') => 'WhatsApp Image Keys',
+
+            default => null,
+        };
+    }
+
+    private function descriptografarMidiaWhatsapp(string $conteudo, ?string $mediaKey, ?string $infoChave): ?string
+    {
+        if (!$mediaKey || !$infoChave) {
+            return null;
+        }
+
+        $mediaKeyBin = base64_decode($mediaKey, true);
+        if ($mediaKeyBin === false) {
+            return null;
+        }
+
+        $derivada = hash_hkdf('sha256', $mediaKeyBin, 80, $infoChave);
+        if (!is_string($derivada) || strlen($derivada) < 80) {
+            return null;
+        }
+
+        $iv = substr($derivada, 0, 16);
+        $cipherKey = substr($derivada, 16, 32);
+        $macKey = substr($derivada, 48, 32);
+
+        if (strlen($conteudo) <= 10) {
+            return null;
+        }
+
+        $cifrado = substr($conteudo, 0, -10);
+        $macEsperado = substr($conteudo, -10);
+
+        $macCalculado = substr(hash_hmac('sha256', $iv . $cifrado, $macKey, true), 0, 10);
+        if (!hash_equals($macCalculado, $macEsperado)) {
+            return null;
+        }
+
+        $decifrado = openssl_decrypt($cifrado, 'aes-256-cbc', $cipherKey, OPENSSL_RAW_DATA, $iv);
+
+        return $decifrado === false ? null : $decifrado;
     }
 }
