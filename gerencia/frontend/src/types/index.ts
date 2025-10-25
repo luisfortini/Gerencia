@@ -1,17 +1,22 @@
 export type LeadStatus =
-  | "novo"
-  | "qualificado"
-  | "interessado"
-  | "negociação"
-  | "follow_up"
-  | "ganho"
-  | "perdido";
+  | 'novo'
+  | 'qualificado'
+  | 'interessado'
+  | 'negociacao'
+  | 'follow_up'
+  | 'ganho'
+  | 'perdido';
 
 export interface LeadMessage {
   msg_id: number;
-  msg_direcao: "in" | "out";
+  msg_direcao: 'in' | 'out';
   msg_conteudo: string;
   msg_recebido_em: string;
+  msg_tipomidia?: string | null;
+  msg_urlmidia?: string | null;
+  msg_mimetype?: string | null;
+  msg_sha256?: string | null;
+  msg_tamanho?: number | null;
 }
 
 export interface LeadResponsavel {
@@ -122,7 +127,7 @@ export interface Usuario {
   usr_id: number;
   usr_nome: string;
   usr_email: string;
-  usr_papel: "gestor" | "operador";
+  usr_papel: 'gestor' | 'operador';
   usr_admin: boolean;
   usr_ativo: boolean;
   created_at?: string;
