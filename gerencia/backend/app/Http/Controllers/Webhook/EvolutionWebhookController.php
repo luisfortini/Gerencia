@@ -162,21 +162,49 @@ class EvolutionWebhookController extends Controller
         }
 
         // --- Baixar mídia (opcional) ---
+        $caminhoLocal = null;
+        $mimetypeDownload = $mimetype;
+
         if ($urlMidia) {
             try {
                 $response = Http::get($urlMidia);
                 if ($response->ok()) {
-                    $ext = match ($tipoMidia) {
-                        'audio' => 'ogg',
-                        'imagem' => 'jpg',
+                    $mimetypeDownload = $mimetypeDownload ?? $response->header('content-type');
+
+                    $ext = match (true) {
+                        str_contains((string) $mimetypeDownload, 'png') => 'png',
+                        str_contains((string) $mimetypeDownload, 'webp') => 'webp',
+                        str_contains((string) $mimetypeDownload, 'gif') => 'gif',
+                        str_contains((string) $mimetypeDownload, 'jpeg'),
+                        str_contains((string) $mimetypeDownload, 'jpg') => 'jpg',
+                        str_contains((string) $mimetypeDownload, 'mp3'),
+                        str_contains((string) $mimetypeDownload, 'mpeg') => 'mp3',
+                        str_contains((string) $mimetypeDownload, 'wav') => 'wav',
+                        str_contains((string) $mimetypeDownload, 'aac') => 'aac',
+                        $tipoMidia === 'audio' => 'ogg',
+                        $tipoMidia === 'imagem' => 'jpg',
                         default => 'bin',
                     };
-                    $nome = "{$mensagem->msg_id}_{$tipoMidia}.{$ext}";
-                    Storage::disk('public')->put("whatsapp/$nome", $response->body());
+
+                    $tipoMidiaSlug = $tipoMidia ?: 'midia';
+                    $caminhoLocal = "whatsapp/{$mensagem->msg_id}_{$tipoMidiaSlug}.{$ext}";
+                    Storage::disk('public')->put($caminhoLocal, $response->body());
                 }
             } catch (\Throwable $e) {
                 Log::warning('Falha ao baixar mídia WhatsApp', ['erro' => $e->getMessage()]);
             }
+        }
+
+        if ($caminhoLocal) {
+            $atualizacoes = [
+                'msg_urlmidia' => $caminhoLocal,
+            ];
+
+            if ($mimetypeDownload && $mensagem->msg_mimetype === null) {
+                $atualizacoes['msg_mimetype'] = $mimetypeDownload;
+            }
+
+            $mensagem->forceFill($atualizacoes)->save();
         }
 
         // --- Se for texto, pode chamar IA ou outro job ---

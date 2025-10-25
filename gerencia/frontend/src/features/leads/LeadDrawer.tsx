@@ -15,6 +15,7 @@ import { useContaUsuarios } from '@/hooks/useContaUsuarios';
 import { useLeadAssignment } from '@/hooks/useLeadAssignment';
 
 import { cn } from '@/lib/utils';
+import { api } from '@/lib/api';
 
 
 
@@ -405,6 +406,12 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
               mensagensOrdenadas.map((msg) => {
 
                 const isInbound = msg.msg_direcao === 'in';
+                const tipoMidia = msg.msg_tipomidia?.toLowerCase() ?? null;
+                const mediaUrl = resolveMensagemMidiaUrl(msg);
+                const imageUrl = tipoMidia === 'imagem' ? mediaUrl : null;
+                const audioUrl = tipoMidia === 'audio' ? mediaUrl : null;
+                const texto = msg.msg_conteudo ?? '';
+                const hasTexto = texto.trim().length > 0;
 
 
 
@@ -434,7 +441,36 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
 
                     >
 
-                      <p className="whitespace-pre-line break-words text-sm leading-relaxed">{msg.msg_conteudo}</p>
+                      {imageUrl ? (
+                        <a href={imageUrl} target="_blank" rel="noreferrer" className="block">
+                          <img
+                            src={imageUrl}
+                            alt={hasTexto ? texto : 'Imagem recebida'}
+                            className="max-h-64 w-auto max-w-full rounded-lg border border-border object-cover"
+                          />
+                        </a>
+                      ) : null}
+
+                      {audioUrl ? (
+                        <audio className="mt-1 w-full max-w-xs" controls preload="metadata" src={audioUrl}>
+                          Seu navegador nao suporta reproducao de audio.
+                        </audio>
+                      ) : null}
+
+                      {hasTexto ? (
+                        <p
+                          className={cn(
+                            'whitespace-pre-line break-words text-sm leading-relaxed',
+                            (imageUrl || audioUrl) && 'mt-2'
+                          )}
+                        >
+                          {texto}
+                        </p>
+                      ) : null}
+
+                      {!hasTexto && !imageUrl && !audioUrl ? (
+                        <p className="text-sm italic opacity-80">Conteudo indisponivel.</p>
+                      ) : null}
 
                       <div
 
@@ -494,3 +530,33 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
 
 };
 
+const resolveMensagemMidiaUrl = (mensagem: NonNullable<Lead['mensagens']>[number]) => {
+  const raw = mensagem.msg_urlmidia;
+  if (!raw) return null;
+
+  if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    return raw;
+  }
+
+  const sanitized = raw.startsWith('/')
+    ? raw.slice(1)
+    : raw;
+
+  const path = sanitized.startsWith('storage/')
+    ? sanitized
+    : `storage/${sanitized}`;
+
+  const base = api.defaults.baseURL;
+
+  if (!base) {
+    return `/${path}`;
+  }
+
+  const root = base.replace(/\/+api\/?$/, '').replace(/\/+$/, '');
+
+  if (!root) {
+    return `/${path}`;
+  }
+
+  return `${root}/${path}`;
+};
