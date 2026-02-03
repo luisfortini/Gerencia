@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LeadDrawer } from '@/features/leads/LeadDrawer';
 import type { Lead } from '@/types';
 
@@ -20,10 +21,15 @@ const lead: Lead = {
 
 describe('LeadDrawer', () => {
   it('mostra conversa e bloco IA quando aberto', () => {
-    render(<LeadDrawer lead={lead} open onOpenChange={jest.fn()} />);
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <LeadDrawer lead={lead} open onOpenChange={jest.fn()} />
+      </QueryClientProvider>
+    );
 
     expect(screen.getByText('Lead Teste')).toBeInTheDocument();
     expect(screen.getByText('Ol�, podemos negociar?')).toBeInTheDocument();
-    expect(screen.getByText('Sugest�es da IA')).toBeInTheDocument();
+    expect(screen.getByText('Sugestoes da IA')).toBeInTheDocument();
   });
 });

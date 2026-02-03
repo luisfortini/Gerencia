@@ -34,9 +34,12 @@ export interface Lead {
   led_status: LeadStatus;
   led_status_conf: number;
   led_valor_total?: number | null;
+  led_observacoes?: string | null;
   led_responsavel_usrid?: number | null;
   responsavel?: LeadResponsavel | null;
   mensagens?: LeadMessage[];
+  auditoriasIa?: AuditoriaIa[];
+  auditorias_ia?: AuditoriaIa[];
 }
 
 export interface Paginated<T> {
@@ -121,6 +124,29 @@ export interface EvolutionConfig {
 export interface DashboardSettings {
   metaPrimeiraRespostaMin: number;
   defaultMetaPrimeiraRespostaMin: number;
+}
+
+export interface IaResposta {
+  status?: string;
+  status_conf?: number;
+  valor_total?: number | null;
+  objecao?: string | null;
+  detalhes?: Record<string, unknown>;
+  responsavel_id?: number | null;
+  responsavel_nome?: string | null;
+}
+
+export interface AuditoriaIa {
+  aia_id: number;
+  aia_status: string;
+  aia_provider?: string | null;
+  aia_resposta?: IaResposta | null;
+  created_at?: string;
+}
+
+export interface EmpresaSettings {
+  empresaSobre: string;
+  empresaProdutos: string;
 }
 
 export interface Usuario {

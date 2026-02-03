@@ -5,7 +5,8 @@ import { LeadsListPage } from '@/pages/LeadsListPage';
 import { LeadsKanbanPage } from '@/pages/LeadsKanbanPage';
 import { InstanciasPage } from '@/pages/InstanciasPage';
 import { UsuariosPage } from '@/pages/UsuariosPage';
-import { AdminGlobalPage } from '@/pages/AdminGlobalPage';
+import { AdminGlobalPage } from '@/pages/AdminGlobalPage';
+import { ConfiguracoesPage } from '@/pages/ConfiguracoesPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
@@ -66,7 +67,8 @@ const App = () => {
           <Route path="/leads/kanban" element={<LeadsKanbanPage />} />
           <Route path="/instancias" element={<InstanciasPage />} />
           <Route path="/usuarios" element={<UsuariosPage />} />
-          <Route path="/admin" element={<AdminGlobalPage />} />
+          <Route path="/configuracoes" element={<ConfiguracoesPage />} />
+          <Route path="/admin" element={<AdminGlobalPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
