@@ -2,7 +2,7 @@ import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState
 
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-import { Bot, ChevronDown, ChevronLeft, ChevronRight, KeyRound, LayoutDashboard, LogOut, MessageSquare, Settings, UserCog, Users } from 'lucide-react';
+import { Bot, Building2, ChevronDown, ChevronLeft, ChevronRight, KeyRound, LayoutDashboard, LogOut, MessageSquare, Settings, UserCog, Users } from 'lucide-react';
 
 import axios from 'axios';
 
@@ -35,6 +35,8 @@ const links = [
   { to: '/leads/lista', label: 'Leads - Lista', icon: MessageSquare },
 
   { to: '/leads/kanban', label: 'Leads - Kanban', icon: Bot },
+
+  { to: '/configuracoes', label: 'Configuracoes', icon: Building2, requiresGestor: true },
 
   { to: '/instancias', label: 'Instâncias WhatsApp', icon: Settings, requiresAdmin: true },
   { to: '/usuarios', label: 'Usuários', icon: UserCog, requiresAdmin: true },
@@ -141,6 +143,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   const isSuperAdmin = usuario?.superadmin === true;
 
   const isAdmin = isSuperAdmin || usuario?.admin === true;
+  const isGestor = usuario?.papel === 'gestor';
 
   const tenantLabel = hasConta
 
@@ -173,12 +176,17 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
           return false;
 
         }
+        if (link.requiresGestor && !(isGestor || isAdmin)) {
+
+          return false;
+
+        }
 
         return true;
 
       }),
 
-    [isAdmin, isSuperAdmin]
+    [isAdmin, isGestor, isSuperAdmin]
 
   );
 

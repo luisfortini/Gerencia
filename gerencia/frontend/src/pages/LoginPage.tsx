@@ -135,7 +135,7 @@ export const LoginPage = () => {
       console.log(err);
       if (isAxiosError(err)) {
         if (err.response?.status === 401) {
-          setError("Credenciais invalidas. Verifique o e-mail e a senha informados.");
+          setError("Credenciais inválidas. Verifique o e-mail e a senha informados.");
         } else {
           setError("Não foi possível realizar o login. Tente novamente em instantes.");
         }

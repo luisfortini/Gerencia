@@ -31,7 +31,7 @@ class OpenAiIaProvider implements IaProviderContract
         $messages = [
             [
                 'role' => 'system',
-                'content' => 'Voce eh um analista comercial senior. Classifique o lead nos status permitidos (novo, qualificado, interessado, negociacao, follow_up, ganho, perdido). Considere historico, direcao das mensagens e conteudo recente. Sempre responda apenas JSON valido contendo status, status_conf (entre 0.70 e 1.0), valor_total (numero ou null), objecao (string ou null), um objeto detalhes com observacoes relevantes (inclua ultima_mensagem e historico_mensagens quando fizer sentido) e o campo responsavel_sugerido. Se receber o array usuarios_disponiveis, tente identificar qual usuario deve assumir o lead e retorne responsavel_sugerido como um objeto { \"id\": <id do usuario>, \"nome\": \"Nome do usuario\", \"motivo\": \"Resumo curto\" }. Caso nao seja possivel sugerir alguem, retorne responsavel_sugerido = null. Voce pode retroceder o status (por exemplo, de follow_up para interessado) quando os sinais forem de perda de interesse. Quando retroceder, adicione em detalhes.motivo_retrocesso uma breve explicacao. Prefira status_conf >= 0.75 quando houver indicios claros e nunca retorne status_conf igual a 0.'
+                'content' => 'Voce eh um analista comercial senior. Classifique o lead nos status permitidos (novo, qualificado, interessado, negociacao, follow_up, ganho, perdido). Considere historico, direcao das mensagens e conteudo recente. Considere o campo contexto_empresa quando informado (empresa_sobre e empresa_produtos). Considere as observacoes do lead quando informadas. Sempre tente identificar o valor da negociacao e preencha valor_total quando houver indicios. Sempre responda apenas JSON valido contendo status, status_conf (entre 0.70 e 1.0), valor_total (numero ou null), objecao (string ou null), um objeto detalhes com observacoes relevantes (inclua ultima_mensagem e historico_mensagens quando fizer sentido) e o campo responsavel_sugerido. Se receber o array usuarios_disponiveis, tente identificar qual usuario deve assumir o lead e retorne responsavel_sugerido como um objeto { \"id\": <id do usuario>, \"nome\": \"Nome do usuario\", \"motivo\": \"Resumo curto\" }. Caso nao seja possivel sugerir alguem, retorne responsavel_sugerido = null. Voce pode retroceder o status (por exemplo, de follow_up para interessado) quando os sinais forem de perda de interesse. Quando retroceder, adicione em detalhes.motivo_retrocesso uma breve explicacao. Prefira status_conf >= 0.75 quando houver indicios claros e nunca retorne status_conf igual a 0.'
             ],
             [
                 'role' => 'user',
@@ -93,7 +93,7 @@ class OpenAiIaProvider implements IaProviderContract
         $decoded = json_decode($content, true);
 
         if (! is_array($decoded)) {
-            throw new RuntimeException('Conteudo IA invalido');
+            throw new RuntimeException('Conteudo IA inválido');
         }
 
         if (! isset($decoded['detalhes']) || ! is_array($decoded['detalhes'])) {

@@ -69,7 +69,7 @@ export const ForgotPasswordPage = () => {
           {message ? <p className="text-sm text-green-600">{message}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Enviando...' : 'Enviar instrucoes'}
+            {isSubmitting ? 'Enviando...' : 'Enviar instruções'}
           </Button>
         </form>
         <div className="mt-6 text-center text-xs text-muted-foreground">

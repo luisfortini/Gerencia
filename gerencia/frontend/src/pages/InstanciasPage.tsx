@@ -1261,7 +1261,7 @@ export const InstanciasPage = () => {
 
       }
 
-    }, 20000);
+    }, 10000);
 
 
 
@@ -1504,9 +1504,9 @@ export const InstanciasPage = () => {
 
         <div className="space-y-3 text-sm text-subtle">
 
-          <p className="font-medium text-green-600">Instancia conectada com sucesso.</p>
+          <p className="font-medium text-green-600">Instância conectada com sucesso.</p>
 
-          <p>Voce ja pode fechar esta janela e usar a instancia nas suas automacoes.</p>
+          <p>Voce já pode fechar esta janela e usar a instância nas suas automações.</p>
 
         </div>
 

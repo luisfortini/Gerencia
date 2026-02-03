@@ -31,6 +31,8 @@ Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
 
     Route::get('instancias', [InstanciaWhatsappController::class, 'index']);
     Route::get('usuarios/opcoes', [UsuarioController::class, 'options']);
+    Route::get('settings/empresa', [ContaSettingsController::class, 'showIaContext']);
+    Route::put('settings/empresa', [ContaSettingsController::class, 'updateIaContext']);
     Route::middleware('admin')->group(function () {
         Route::get('usuarios', [UsuarioController::class, 'index']);
         Route::post('usuarios', [UsuarioController::class, 'store']);

@@ -488,7 +488,7 @@ export const UsuariosPage = () => {
 
             <CardTitle>Usuarios da conta</CardTitle>
 
-            <CardDescription>Gerencie quem tem acesso ao painel e defina as permissoes de cada membro.</CardDescription>
+            <CardDescription>Gerencie quem tem acesso ao painel e defina as permissões de cada membro.</CardDescription>
 
           </div>
 

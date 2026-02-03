@@ -8,6 +8,7 @@ use App\Services\Ia\IaResponse;
 use App\Services\Ia\IaServiceFactory;
 use App\Services\LeadAssignmentService;
 use App\Services\LeadStatusService;
+use App\Services\SystemSettingService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -27,7 +28,8 @@ class ProcessIaJob implements ShouldQueue
     public function handle(
         IaServiceFactory $factory,
         LeadStatusService $statusService,
-        LeadAssignmentService $assignmentService
+        LeadAssignmentService $assignmentService,
+        SystemSettingService $settings
     ): void {
         $mensagem = Mensagem::with([
             'lead.conta',
@@ -66,6 +68,7 @@ class ProcessIaJob implements ShouldQueue
                 'status' => $lead->led_status,
                 'status_conf' => (float) $lead->led_status_conf,
                 'valor_total' => $lead->led_valor_total !== null ? (float) $lead->led_valor_total : null,
+                'observacoes' => $lead->led_observacoes,
                 'ultima_atualizacao_ia' => $lead->led_ultima_atualizacao_ia ? $lead->led_ultima_atualizacao_ia->toIso8601String() : null,
             ],
             'mensagem' => [
@@ -104,6 +107,19 @@ class ProcessIaJob implements ShouldQueue
 
             if (! empty($usuariosDisponiveis)) {
                 $payload['usuarios_disponiveis'] = $usuariosDisponiveis;
+            }
+
+            $contextoIa = $settings->get("conta:{$conta->cta_id}:ia_contexto");
+            if (is_array($contextoIa)) {
+                $empresaSobre = trim((string) ($contextoIa['empresa_sobre'] ?? ''));
+                $empresaProdutos = trim((string) ($contextoIa['empresa_produtos'] ?? ''));
+
+                if ($empresaSobre !== '' || $empresaProdutos !== '') {
+                    $payload['contexto_empresa'] = [
+                        'empresa_sobre' => $empresaSobre,
+                        'empresa_produtos' => $empresaProdutos,
+                    ];
+                }
             }
         }
 
@@ -156,4 +172,3 @@ class ProcessIaJob implements ShouldQueue
         }
     }
 }
-

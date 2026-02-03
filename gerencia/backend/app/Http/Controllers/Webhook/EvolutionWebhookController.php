@@ -23,6 +23,10 @@ class EvolutionWebhookController extends Controller
         $token = $request->header('X-Webhook-Token');
         $instancia = InstanciaWhatsapp::where('iwh_webhook_token', $token)->first();
         abort_if(!$instancia, 401, 'Token inválido');
+        // Ignora eventos de update (ex.: status READ) para evitar ruido no log.
+        if ($request->input('event') === 'messages.update') {
+            return response()->json(['status' => 'ok']);
+        }
 
         // --- Validação tolerante ---
         $rules = [
@@ -76,7 +80,7 @@ class EvolutionWebhookController extends Controller
         $isAudio   = filled(data_get($v, 'data.message.audioMessage'))
                   || $msgType === 'audioMessage';
 
-        // --- Telefone e dados base ---
+        // --- Telefone e dados base --- 
         $jidFonte  = data_get($v, 'data.key.participant') ?: $remoteJid;
         $telefone  = preg_replace('/\D+/', '', Str::before($jidFonte ?? '', '@'));
         $direcao   = data_get($v, 'data.key.fromMe') ? 'out' : 'in';
@@ -137,7 +141,7 @@ class EvolutionWebhookController extends Controller
         'led_observacoes'  => null,
         'led_ultima_atualizacao_ia' => null,
     ]
-);
+);   
 
         // --- Montar payload para salvar ---
         $dados = [
@@ -170,7 +174,18 @@ class EvolutionWebhookController extends Controller
 
         if ($urlMidia) {
             try {
-                $response = Http::get($urlMidia);
+                $request = Http::timeout(15)->withOptions([
+                    'verify' => filter_var(config('services.evolution.verify_ssl', true), FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? true,
+                ]);
+
+                $apiKey = $instancia->iwh_api_key ?: config('services.evolution.api_key');
+                if (!empty($apiKey)) {
+                    $request = $request->withHeaders([
+                        'apikey' => $apiKey,
+                    ]);
+                }
+
+                $response = $request->get($urlMidia);
                 if ($response->ok()) {
                     $mimetypeDownload = $mimetypeDownload ?? $response->header('content-type');
 
