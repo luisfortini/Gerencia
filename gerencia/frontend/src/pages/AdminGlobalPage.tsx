@@ -39,6 +39,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
 
 import { Navigate } from "react-router-dom";
+import { api } from '@/lib/api';
 
 
 
@@ -47,6 +48,13 @@ type FeedbackState = { type: "success" | "error"; message: string } | null;
 
 
 type ContaFormState = {
+  criarUsuarioInicial: boolean;
+  usuarioNome: string;
+  usuarioEmail: string;
+  usuarioSenha: string;
+  usuarioPapel: 'gestor' | 'operador';
+  usuarioAdmin: boolean;
+
 
   nome: string;
 
@@ -69,6 +77,12 @@ type ContaFormState = {
 
 
 const createDefaultContaForm = (): ContaFormState => ({
+  criarUsuarioInicial: false,
+  usuarioNome: '',
+  usuarioEmail: '',
+  usuarioSenha: '',
+  usuarioPapel: 'gestor',
+  usuarioAdmin: true,
 
   nome: "",
 
@@ -169,6 +183,7 @@ export const AdminGlobalPage = () => {
   const [contaModalOpen, setContaModalOpen] = useState(false);
 
   const [editingContaId, setEditingContaId] = useState<number | null>(null);
+  const [createdContaIdForUser, setCreatedContaIdForUser] = useState<number | null>(null);
 
   const [contaForm, setContaForm] = useState<ContaFormState>(createDefaultContaForm());
 
@@ -199,6 +214,12 @@ export const AdminGlobalPage = () => {
   const contasLoading = contasQuery.isLoading;
 
   const isSavingConta = createContaMutation.isPending || updateContaMutation.isPending;
+  const primaryContaButtonLabel =
+    editingContaId === null
+      ? createdContaIdForUser !== null && contaForm.criarUsuarioInicial
+        ? 'Criar usuario'
+        : 'Criar conta'
+      : 'Salvar alteracoes';
 
 
 
@@ -207,6 +228,7 @@ export const AdminGlobalPage = () => {
     setContaForm(createDefaultContaForm());
 
     setEditingContaId(null);
+    setCreatedContaIdForUser(null);
 
     setContaModalError(null);
 
@@ -241,6 +263,12 @@ export const AdminGlobalPage = () => {
     setContaForm({
 
       nome: conta.cta_nome ?? "",
+      criarUsuarioInicial: false,
+      usuarioNome: '',
+      usuarioEmail: '',
+      usuarioSenha: '',
+      usuarioPapel: 'gestor',
+      usuarioAdmin: true,
 
       slug: conta.cta_slug ?? "",
 
@@ -259,6 +287,7 @@ export const AdminGlobalPage = () => {
     });
 
     setEditingContaId(conta.cta_id);
+    setCreatedContaIdForUser(null);
 
     setContaModalError(null);
 
@@ -368,9 +397,16 @@ export const AdminGlobalPage = () => {
 
   };
 
+  const coerceBoolean = (field: keyof ContaFormState, value: string) => {
+    if (field === 'criarUsuarioInicial' || field === 'usuarioAdmin') {
+      return value === 'true';
+    }
+    return value;
+  };
+
   const handleContaChange = (field: keyof ContaFormState, value: string) => {
 
-    setContaForm((prev) => ({ ...prev, [field]: value }));
+    setContaForm((prev) => ({ ...prev, [field]: coerceBoolean(field, value) as any }));
 
   };
 
@@ -418,6 +454,29 @@ export const AdminGlobalPage = () => {
 
     }
 
+    const shouldCreateUser = editingContaId === null && contaForm.criarUsuarioInicial;
+
+    if (shouldCreateUser) {
+      const nomeUsuario = contaForm.usuarioNome.trim();
+      const emailUsuario = contaForm.usuarioEmail.trim();
+      const senhaUsuario = contaForm.usuarioSenha;
+
+      if (!nomeUsuario) {
+        setContaModalError("Informe o nome do usuario inicial.");
+        return;
+      }
+
+      if (!emailUsuario) {
+        setContaModalError("Informe o e-mail do usuario inicial.");
+        return;
+      }
+
+      if (!senhaUsuario) {
+        setContaModalError("Informe a senha do usuario inicial.");
+        return;
+      }
+    }
+
 
 
     const payload = {
@@ -445,10 +504,40 @@ export const AdminGlobalPage = () => {
     try {
 
       if (editingContaId === null) {
+        let contaId = createdContaIdForUser;
 
-        await createContaMutation.mutateAsync(payload);
+        if (contaId === null) {
+          const contaCriada = await createContaMutation.mutateAsync(payload);
+          contaId = contaCriada.cta_id;
+          setCreatedContaIdForUser(contaId);
+        }
+
+        if (shouldCreateUser && contaId !== null) {
+          try {
+            await api.post(`/admin/contas/${contaId}/usuarios`, {
+              usr_nome: contaForm.usuarioNome.trim(),
+              usr_email: contaForm.usuarioEmail.trim(),
+              usr_senha: contaForm.usuarioSenha,
+              usr_papel: contaForm.usuarioPapel,
+              usr_admin: contaForm.usuarioAdmin,
+            });
+          } catch (error) {
+            const message = isAxiosError(error)
+              ? error.response?.data?.message ?? error.message
+              : "Nao foi possivel criar o usuario inicial.";
+            setContaModalError(
+              typeof message === "string" ? message : "Nao foi possivel criar o usuario inicial."
+            );
+            setContaListFeedback({
+              type: "error",
+              message: "Conta criada, mas nao foi possivel criar o usuario inicial.",
+            });
+            return;
+          }
+        }
 
         setContaListFeedback({ type: "success", message: "Conta criada com sucesso." });
+        setCreatedContaIdForUser(null);
 
       } else {
 
@@ -966,7 +1055,7 @@ export const AdminGlobalPage = () => {
 
             <Button type="submit" form="conta-form" disabled={isSavingConta}>
 
-              {isSavingConta ? "Salvando..." : editingContaId === null ? "Criar conta" : "Salvar alterações"}
+              {isSavingConta ? "Salvando..." : primaryContaButtonLabel}
 
             </Button>
 
@@ -1108,7 +1197,7 @@ export const AdminGlobalPage = () => {
 
                 value={contaForm.limiteInstancias}
 
-                onChange={(event) => handleContaChange("limiteInstâncias", event.target.value)}
+                onChange={(event) => handleContaChange("limiteInstancias", event.target.value)}
 
                 required
 
@@ -1134,7 +1223,7 @@ export const AdminGlobalPage = () => {
 
                 value={contaForm.limiteUsuarios}
 
-                onChange={(event) => handleContaChange("limiteUsuários", event.target.value)}
+                onChange={(event) => handleContaChange("limiteUsuarios", event.target.value)}
 
                 required
 
@@ -1160,7 +1249,7 @@ export const AdminGlobalPage = () => {
 
                 value={contaForm.retencaoDias}
 
-                onChange={(event) => handleContaChange("retençãoDias", event.target.value)}
+                onChange={(event) => handleContaChange("retencaoDias", event.target.value)}
 
                 required
 
@@ -1172,7 +1261,94 @@ export const AdminGlobalPage = () => {
 
 
 
-          <div className="space-y-1">
+          
+
+          {editingContaId === null ? (
+            <div className="space-y-3 rounded-xl border border-border bg-muted/10 p-3">
+              <div className="flex items-center gap-2">
+                <input
+                  id="conta-criar-usuario"
+                  type="checkbox"
+                  checked={contaForm.criarUsuarioInicial}
+                  onChange={(event) => handleContaChange('criarUsuarioInicial', String(event.target.checked))}
+                  className="h-4 w-4 rounded border border-border"
+                />
+                <label htmlFor="conta-criar-usuario" className="text-sm text-foreground">
+                  Criar usuario inicial
+                </label>
+              </div>
+
+              {contaForm.criarUsuarioInicial ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-subtle" htmlFor="usuario-nome">
+                      Nome do usuario
+                    </label>
+                    <Input
+                      id="usuario-nome"
+                      value={contaForm.usuarioNome}
+                      onChange={(event) => handleContaChange('usuarioNome', event.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-subtle" htmlFor="usuario-email">
+                      E-mail do usuario
+                    </label>
+                    <Input
+                      id="usuario-email"
+                      type="email"
+                      value={contaForm.usuarioEmail}
+                      onChange={(event) => handleContaChange('usuarioEmail', event.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-subtle" htmlFor="usuario-senha">
+                      Senha inicial
+                    </label>
+                    <Input
+                      id="usuario-senha"
+                      type="password"
+                      value={contaForm.usuarioSenha}
+                      onChange={(event) => handleContaChange('usuarioSenha', event.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-subtle" htmlFor="usuario-papel">
+                      Papel
+                    </label>
+                    <Select
+                      id="usuario-papel"
+                      value={contaForm.usuarioPapel}
+                      onChange={(event) => handleContaChange('usuarioPapel', event.target.value as ContaFormState['usuarioPapel'])}
+                    >
+                      <option value="gestor">Gestor</option>
+                      <option value="operador">Operador</option>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-2 md:col-span-2">
+                    <input
+                      id="usuario-admin"
+                      type="checkbox"
+                      checked={contaForm.usuarioAdmin}
+                      onChange={(event) => handleContaChange('usuarioAdmin', String(event.target.checked))}
+                      className="h-4 w-4 rounded border border-border"
+                    />
+                    <label htmlFor="usuario-admin" className="text-sm text-foreground">
+                      Conceder permissao de admin
+                    </label>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+<div className="space-y-1">
 
             <label className="text-xs font-medium text-subtle" htmlFor="conta-observacoes">
 
@@ -1188,7 +1364,7 @@ export const AdminGlobalPage = () => {
 
               value={contaForm.observacoes}
 
-              onChange={(event) => handleContaChange("observações", event.target.value)}
+              onChange={(event) => handleContaChange("observacoes", event.target.value)}
 
               placeholder="Informações adicionais, notas internas ou particularidades do cliente."
 

@@ -6,17 +6,25 @@ use App\Http\Controllers\Controller;
 use App\Jobs\ProcessIaJob;
 use App\Models\InstanciaWhatsapp;
 use App\Models\Mensagem;
+use App\Services\WhatsappMediaService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class EvolutionWebhookController extends Controller
 {
+    private static ?array $mensagemColumnsCache = null;
+
+    public function __construct(private readonly WhatsappMediaService $mediaService)
+    {
+    }
+
     public function __invoke(Request $request): JsonResponse
     {
         // --- Autenticação ---
@@ -46,9 +54,14 @@ class EvolutionWebhookController extends Controller
             'data.message.imageMessage.url'                 => ['nullable', 'string'],
             'data.message.imageMessage.mimetype'            => ['nullable', 'string'],
             'data.message.imageMessage.caption'             => ['nullable', 'string'],
+            'data.message.imageMessage.mediaKey'            => ['nullable'],
+            'data.message.imageMessage.fileSha256'          => ['nullable'],
+            'data.message.imageMessage.fileLength'          => ['nullable'],
             'data.message.audioMessage.url'                 => ['nullable', 'string'],
             'data.message.audioMessage.mimetype'            => ['nullable', 'string'],
             'data.message.audioMessage.fileLength'          => ['nullable'],
+            'data.message.audioMessage.mediaKey'            => ['nullable'],
+            'data.message.audioMessage.fileSha256'          => ['nullable'],
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -69,25 +82,64 @@ class EvolutionWebhookController extends Controller
         }
 
         // --- Identificação do tipo ---
-        $msgType   = data_get($v, 'messageType');
-        $isText    = filled(data_get($v, 'data.message.conversation'))
-                  || filled(data_get($v, 'data.message.extendedTextMessage.text'))
-                  || in_array($msgType, ['conversation', 'extendedTextMessage'], true);
+        $payload = $request->all();
+        $msgType = data_get($payload, 'data.messageType')
+            ?? data_get($payload, 'messageType')
+            ?? data_get($v, 'data.messageType')
+            ?? data_get($v, 'messageType');
+        $messagePayload = data_get($payload, 'data.message');
+        if (!is_array($messagePayload)) {
+            $messagePayload = data_get($v, 'data.message');
+        }
+        $message = is_array($messagePayload) ? $this->unwrapMensagem($messagePayload) : [];
 
-        $isImage   = filled(data_get($v, 'data.message.imageMessage'))
-                  || $msgType === 'imageMessage';
+        $isText  = filled(data_get($message, 'conversation'))
+                || filled(data_get($message, 'extendedTextMessage.text'))
+                || in_array($msgType, ['conversation', 'extendedTextMessage'], true);
 
-        $isAudio   = filled(data_get($v, 'data.message.audioMessage'))
-                  || $msgType === 'audioMessage';
+        $imagePayload = data_get($message, 'imageMessage') ?: data_get($message, 'stickerMessage');
+        $audioPayload = data_get($message, 'audioMessage') ?: data_get($message, 'pttMessage');
+        if (!$imagePayload) {
+            $imagePayload = data_get($v, 'data.message.imageMessage');
+        }
+        if (!$audioPayload) {
+            $audioPayload = data_get($v, 'data.message.audioMessage');
+        }
 
-        // --- Telefone e dados base --- 
-        $jidFonte  = data_get($v, 'data.key.participant') ?: $remoteJid;
+        $isImage = filled($imagePayload)
+                || in_array($msgType, ['imageMessage', 'stickerMessage'], true);
+
+        $isAudio = filled($audioPayload)
+                || in_array($msgType, ['audioMessage', 'pttMessage'], true);
+
+        // --- Telefone e dados base ---
+        // Para conversas 1:1 (grupos já foram ignorados), use sempre o remoteJid.
+        $jidFonte  = $remoteJid;
         $telefone  = preg_replace('/\D+/', '', Str::before($jidFonte ?? '', '@'));
         $direcao   = data_get($v, 'data.key.fromMe') ? 'out' : 'in';
         $nome      = data_get($v, 'data.pushName');
         $recebidoEm = Carbon::parse($v['date_time'])
             ->setTimezone(config('app.timezone', 'America/Sao_Paulo'))
             ->toDateTimeString();
+
+        if (blank($telefone)) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        $telefoneInstancia = preg_replace(
+            '/\D+/',
+            '',
+            (string) data_get($instancia->iwh_metadata ?? [], 'phone_number', '')
+        );
+
+        if (filled($telefoneInstancia)) {
+            $telefoneSemPrefixo = preg_replace('/^55/', '', $telefone);
+            $instanciaSemPrefixo = preg_replace('/^55/', '', $telefoneInstancia);
+
+            if ($telefone === $telefoneInstancia || $telefoneSemPrefixo === $instanciaSemPrefixo) {
+                return response()->json(['status' => 'ok']);
+            }
+        }
 
         // --- Conteúdo e mídia ---
         $conteudo = '';
@@ -99,27 +151,39 @@ class EvolutionWebhookController extends Controller
         $mediaKey = null;
 
         if ($isText) {
-            $conteudo = data_get($v, 'data.message.conversation')
+            $conteudo = data_get($message, 'conversation')
+                ?? data_get($message, 'extendedTextMessage.text')
+                ?? data_get($v, 'data.message.conversation')
                 ?? data_get($v, 'data.message.extendedTextMessage.text')
                 ?? '';
         } elseif ($isAudio) {
             $conteudo = 'Áudio';
             $tipoMidia = 'audio';
-            $urlMidia = data_get($v, 'data.message.audioMessage.url');
-            $mimetype = data_get($v, 'data.message.audioMessage.mimetype');
-            $sha256 = data_get($v, 'data.message.audioMessage.fileSha256');
-            $tamanho = (int)data_get($v, 'data.message.audioMessage.fileLength');
-            $mediaKey = data_get($v, 'data.message.audioMessage.mediaKey');
+            $urlMidia = data_get($audioPayload, 'url');
+            $mimetype = data_get($audioPayload, 'mimetype');
+            $sha256 = $this->normalizeBinaryField(data_get($audioPayload, 'fileSha256'));
+            $tamanho = $this->normalizeFileLength(data_get($audioPayload, 'fileLength'));
+            $mediaKey = $this->normalizeBinaryField(data_get($audioPayload, 'mediaKey'));
         } elseif ($isImage) {
-            $conteudo = data_get($v, 'data.message.imageMessage.caption') ?: 'Imagem';
+            $conteudo = data_get($imagePayload, 'caption') ?: 'Imagem';
             $tipoMidia = 'imagem';
-            $urlMidia = data_get($v, 'data.message.imageMessage.url');
-            $mimetype = data_get($v, 'data.message.imageMessage.mimetype');
-            $sha256 = data_get($v, 'data.message.imageMessage.fileSha256');
-            $tamanho = (int)data_get($v, 'data.message.imageMessage.fileLength');
-            $mediaKey = data_get($v, 'data.message.imageMessage.mediaKey');
+            $urlMidia = data_get($imagePayload, 'url');
+            $mimetype = data_get($imagePayload, 'mimetype');
+            $sha256 = $this->normalizeBinaryField(data_get($imagePayload, 'fileSha256'));
+            $tamanho = $this->normalizeFileLength(data_get($imagePayload, 'fileLength'));
+            $mediaKey = $this->normalizeBinaryField(data_get($imagePayload, 'mediaKey'));
         } else {
             $conteudo = 'Outro';
+        }
+
+        if ($urlMidia && blank($mediaKey)) {
+            Log::warning('Midia WhatsApp recebida sem mediaKey', [
+                'msg_id' => data_get($v, 'data.key.id'),
+                'instancia_id' => $instancia->iwh_id,
+                'telefone' => $telefone,
+                'tipo' => $tipoMidia,
+                'msg_type' => $msgType,
+            ]);
         }
 
 
@@ -154,9 +218,22 @@ class EvolutionWebhookController extends Controller
             'msg_mimetype'   => $mimetype,
             'msg_sha256'     => $sha256,
             'msg_tamanho'    => $tamanho,
-            'msg_msgid'      => data_get($v, 'data.key.id'),
+            'msg_msgid'      => data_get($v, 'data.key.id')
+                ?? data_get($payload, 'data.key.id')
+                ?? data_get($v, 'data.keyId')
+                ?? data_get($payload, 'data.keyId')
+                ?? data_get($v, 'data.messageId')
+                ?? data_get($payload, 'data.messageId'),
             'msg_recebido_em'=> $recebidoEm,
         ];
+
+        if ($this->mensagemHasColumn('msg_msgtype')) {
+            $dados['msg_msgtype'] = $msgType;
+        }
+
+        if ($this->mensagemHasColumn('msg_media_key')) {
+            $dados['msg_media_key'] = $mediaKey;
+        }
 
         try {
             $mensagem = Mensagem::create($dados);
@@ -171,6 +248,7 @@ class EvolutionWebhookController extends Controller
         // --- Baixar mídia (opcional) ---
         $caminhoLocal = null;
         $mimetypeDownload = $mimetype;
+        $conteudoDescriptografado = null;
 
         if ($urlMidia) {
             try {
@@ -207,8 +285,12 @@ class EvolutionWebhookController extends Controller
                     $tipoMidiaSlug = $tipoMidia ?: 'midia';
                     $caminhoLocal = "whatsapp/{$mensagem->msg_id}_{$tipoMidiaSlug}.{$ext}";
                     $conteudoArquivo = $response->body();
-                    $infoChave = $this->resolverInfoChaveMidia($msgType, $tipoMidia, $mimetypeDownload);
-                    $conteudoDescriptografado = $this->descriptografarMidiaWhatsapp($conteudoArquivo, $mediaKey, $infoChave);
+                    $infoChave = $this->mediaService->resolveInfoChaveMidia($msgType, $tipoMidia, $mimetypeDownload);
+                    $conteudoDescriptografado = $this->mediaService->descriptografarMidiaWhatsapp(
+                        $conteudoArquivo,
+                        $mediaKey,
+                        $infoChave
+                    );
 
                     if ($conteudoDescriptografado === null && $mediaKey) {
                         Log::warning('Falha ao descriptografar midia WhatsApp', [
@@ -237,6 +319,13 @@ class EvolutionWebhookController extends Controller
                 $atualizacoes['msg_mimetype'] = $mimetypeDownload;
             }
 
+            if ($conteudoDescriptografado !== null
+                && $this->mensagemHasColumn('msg_midia')
+                && $this->shouldStoreMediaInDatabase($msgType, $tipoMidia, $mimetypeDownload)
+            ) {
+                $atualizacoes['msg_midia'] = base64_encode($conteudoDescriptografado);
+            }
+
             $mensagem->forceFill($atualizacoes)->save();
         }
 
@@ -248,62 +337,112 @@ class EvolutionWebhookController extends Controller
         return response()->json(['status' => 'ok']);
     }
 
-    private function resolverInfoChaveMidia(?string $msgType, ?string $tipoMidia, ?string $mimetype): ?string
+    private function mensagemHasColumn(string $column): bool
     {
-        return match (true) {
-            in_array($msgType, ['audioMessage', 'pttMessage'], true),
-            $tipoMidia === 'audio',
-            str_contains((string) $mimetype, 'audio/') => 'WhatsApp Audio Keys',
+        if (self::$mensagemColumnsCache === null) {
+            try {
+                self::$mensagemColumnsCache = Schema::getColumnListing('mensagem');
+            } catch (\Throwable $e) {
+                self::$mensagemColumnsCache = [];
+            }
+        }
 
-            in_array($msgType, ['videoMessage'], true),
-            $tipoMidia === 'video',
-            str_contains((string) $mimetype, 'video/') => 'WhatsApp Video Keys',
-
-            in_array($msgType, ['documentMessage'], true),
-            str_contains((string) $mimetype, 'application/') => 'WhatsApp Document Keys',
-
-            in_array($msgType, ['imageMessage', 'stickerMessage'], true),
-            $tipoMidia === 'imagem',
-            str_contains((string) $mimetype, 'image/') => 'WhatsApp Image Keys',
-
-            default => null,
-        };
+        return in_array($column, self::$mensagemColumnsCache, true);
     }
 
-    private function descriptografarMidiaWhatsapp(string $conteudo, ?string $mediaKey, ?string $infoChave): ?string
+    private function unwrapMensagem(array $message): array
     {
-        if (!$mediaKey || !$infoChave) {
+        $candidates = [
+            'ephemeralMessage.message',
+            'viewOnceMessage.message',
+            'viewOnceMessageV2.message',
+            'viewOnceMessageV2Extension.message',
+            'documentWithCaptionMessage.message',
+            'editedMessage.message',
+        ];
+
+        $current = $message;
+        for ($i = 0; $i < 3; $i++) {
+            $next = null;
+            foreach ($candidates as $path) {
+                $candidate = data_get($current, $path);
+                if (is_array($candidate)) {
+                    $next = $candidate;
+                    break;
+                }
+            }
+            if ($next === null) {
+                break;
+            }
+            $current = $next;
+        }
+
+        return $current;
+    }
+
+    private function normalizeBinaryField(mixed $value): ?string
+    {
+        if ($value === null) {
             return null;
         }
 
-        $mediaKeyBin = base64_decode($mediaKey, true);
-        if ($mediaKeyBin === false) {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if (is_array($value)) {
+            $binary = '';
+            foreach ($value as $byte) {
+                if (!is_numeric($byte)) {
+                    continue;
+                }
+                $intByte = (int) $byte;
+                if ($intByte < 0 || $intByte > 255) {
+                    continue;
+                }
+                $binary .= chr($intByte);
+            }
+
+            return $binary === '' ? null : base64_encode($binary);
+        }
+
+        return null;
+    }
+
+    private function normalizeFileLength(mixed $value): ?int
+    {
+        if ($value === null) {
             return null;
         }
 
-        $derivada = hash_hkdf('sha256', $mediaKeyBin, 80, $infoChave);
-        if (!is_string($derivada) || strlen($derivada) < 80) {
-            return null;
+        if (is_numeric($value)) {
+            return (int) $value;
         }
 
-        $iv = substr($derivada, 0, 16);
-        $cipherKey = substr($derivada, 16, 32);
-        $macKey = substr($derivada, 48, 32);
+        if (is_array($value)) {
+            $low = (int) ($value['low'] ?? 0);
+            $high = (int) ($value['high'] ?? 0);
 
-        if (strlen($conteudo) <= 10) {
-            return null;
+            if ($high === 0) {
+                return $low;
+            }
+
+            return $low + ($high << 32);
         }
 
-        $cifrado = substr($conteudo, 0, -10);
-        $macEsperado = substr($conteudo, -10);
+        return null;
+    }
 
-        $macCalculado = substr(hash_hmac('sha256', $iv . $cifrado, $macKey, true), 0, 10);
-        if (!hash_equals($macCalculado, $macEsperado)) {
-            return null;
+    private function shouldStoreMediaInDatabase(?string $msgType, ?string $tipoMidia, ?string $mimetype): bool
+    {
+        if ($tipoMidia === 'imagem') {
+            return true;
         }
 
-        $decifrado = openssl_decrypt($cifrado, 'aes-256-cbc', $cipherKey, OPENSSL_RAW_DATA, $iv);
+        if (in_array($msgType, ['imageMessage', 'stickerMessage'], true)) {
+            return true;
+        }
 
-        return $decifrado === false ? null : $decifrado;
+        return str_contains((string) $mimetype, 'image/');
     }
 }

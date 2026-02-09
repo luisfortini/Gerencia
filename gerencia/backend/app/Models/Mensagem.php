@@ -21,8 +21,11 @@ class Mensagem extends Model
         'msg_msgid',
         'msg_recebido_em',
         'msg_tipomidia',
+        'msg_msgtype',
         'msg_urlmidia',
         'msg_mimetype',
+        'msg_media_key',
+        'msg_midia',
         'msg_sha256',
         'msg_tamanho'
     ];

@@ -100,7 +100,7 @@ class AuthController extends Controller
 
         if (! $usuario) {
             return response()->json([
-                'message' => 'Se o e-mail estiver cadastrado, enviaremos instrucoes para recuperar a senha em instantes.'
+                'message' => 'Se o e-mail estiver cadastrado, enviaremos instruções para recuperar a senha em instantes.'
             ]);
         }
 
@@ -125,14 +125,14 @@ class AuthController extends Controller
         try {
             Mail::to($usuario->usr_email)->send(new PasswordResetMail($usuario, $token, $resetUrl));
         } catch (\Throwable $exception) {
-            Log::error('Falha ao enviar e-mail de recuperacao de senha.', [
+            Log::error('Falha ao enviar e-mail de recuperação de senha.', [
                 'email' => $usuario->usr_email,
                 'exception' => $exception->getMessage(),
             ]);
         }
 
         return response()->json([
-            'message' => 'Se o e-mail estiver cadastrado, enviaremos instrucoes para recuperar a senha em instantes.'
+            'message' => 'Se o e-mail estiver cadastrado, enviaremos instruções para recuperar a senha em instantes.'
         ]);
     }
 
@@ -157,7 +157,7 @@ class AuthController extends Controller
 
         if ($tokenExpirado || ! Hash::check($data['token'], $record->token)) {
             return response()->json([
-                'message' => 'Token invalido ou expirado.',
+                'message' => 'Token inválido ou expirado.',
             ], 422);
         }
 

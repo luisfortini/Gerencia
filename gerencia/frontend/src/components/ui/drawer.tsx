@@ -6,7 +6,7 @@ interface DrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description?: string;
+  description?: React.ReactNode;
   children: React.ReactNode;
   widthClass?: string;
 }
@@ -25,7 +25,11 @@ export const Drawer: React.FC<DrawerProps> = ({ open, onOpenChange, title, descr
         <div className="flex items-start justify-between border-b border-border px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-            {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+            {description
+              ? typeof description === 'string'
+                ? <p className="text-sm text-muted-foreground">{description}</p>
+                : <div className="text-sm text-muted-foreground">{description}</div>
+              : null}
           </div>
           <button
             className="text-subtle transition hover:text-foreground"

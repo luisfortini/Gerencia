@@ -20,7 +20,7 @@ class PasswordResetMail extends Mailable
 
     public function build(): self
     {
-        return $this->subject('Recupera??o de senha - ' . config('app.name'))
+        return $this->subject('Recuperação de senha - ' . config('app.name'))
             ->view('emails.password_reset')
             ->with([
                 'usuario' => $this->usuario,

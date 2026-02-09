@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -65,7 +65,7 @@ const parseStoredUser = () => {
 
   } catch (error) {
 
-    console.warn('N√£o foi poss√≠vel interpretar os dados armazenados do usu√°rio.', error);
+    console.warn('N„o foi possÌvel interpretar os dados armazenados do usu·rio.', error);
 
     return null;
 
@@ -130,7 +130,6 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
   const [isSavingObservacoes, setIsSavingObservacoes] = useState(false);
   const [iaFeedback, setIaFeedback] = useState<FeedbackState>(null);
   const [isApplyingIa, setIsApplyingIa] = useState(false);
-  const mensagensContainerRef = useRef<HTMLDivElement | null>(null);
 
   const parseNumero = (value: unknown) => {
     if (value === null || value === undefined) {
@@ -201,19 +200,6 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
 
   }, [lead?.mensagens]);
 
-  useEffect(() => {
-    if (!open) return;
-
-    const container = mensagensContainerRef.current;
-    if (!container) return;
-
-    const handle = requestAnimationFrame(() => {
-      container.scrollTop = container.scrollHeight;
-    });
-
-    return () => cancelAnimationFrame(handle);
-  }, [open, lead?.led_id, mensagensOrdenadas.length]);
-
 
 
   if (!lead) return null;
@@ -282,7 +268,7 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
 
         type: 'success',
 
-        message: responsavelId ? 'Respons√°vel atualizado com sucesso.' : 'Lead desatribu√≠do.',
+        message: responsavelId ? 'Respons·vel atualizado com sucesso.' : 'Lead desatribuÌdo.',
 
       });
 
@@ -292,7 +278,7 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
 
         type: 'error',
 
-        message: resolveErrorMessage(error, 'N√£o foi poss√≠vel atualizar o responsavel.'),
+        message: resolveErrorMessage(error, 'N„o foi possÌvel atualizar o responsavel.'),
 
       });
 
@@ -304,7 +290,7 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
 
   const responsavelAtual = lead.responsavel?.usr_nome
 
-    ?? (lead.led_responsavel_usrid ? `Usuario #${lead.led_responsavel_usrid}` : 'N√£o atribu√≠do');
+    ?? (lead.led_responsavel_usrid ? `Usuario #${lead.led_responsavel_usrid}` : 'N„o atribuÌdo');
 
 
 
@@ -348,7 +334,7 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
     } catch (error) {
       setValorFeedback({
         type: 'error',
-        message: resolveErrorMessage(error, 'N√£o foi possivel atualizar o valor da negocia√ß√£o.'),
+        message: resolveErrorMessage(error, 'N„o foi possivel atualizar o valor da negociaÁ„o.'),
       });
     } finally {
       setIsSavingValor(false);
@@ -543,30 +529,194 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
 
       title={lead.led_nome}
 
-      description={(
-        <div className="flex flex-wrap items-center gap-3">
-          <span>{lead.led_email ?? 'Sem e-mail cadastrado'}</span>
-          <span className="h-1 w-1 rounded-full bg-muted-foreground/60" aria-hidden="true" />
-          <span>
-            Valor negociacao:{' '}
-            <span className="font-medium text-foreground">{valorAtual}</span>
-          </span>
-        </div>
-      )}
-
-      widthClass="w-[95vw] max-w-6xl"
+      description={lead.led_email ?? 'Sem e-mail cadastrado'}
 
     >
 
-      
-      <div className="grid h-full min-h-0 gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="order-3 flex min-h-0 flex-col lg:order-1">
-          <section className="flex min-h-0 flex-1 flex-col space-y-3">
+      <div className="space-y-6">
+
+        <section>
+
+          <div className="flex flex-wrap items-center gap-3">
+
+            <StatusBadge status={lead.led_status} />
+
+            <span className="text-sm text-muted-foreground">
+
+              Confianca: {Math.round((lead.led_status_conf ?? 0) * 100)}%
+
+            </span>
+
+          </div>
+
+          <p className="mt-2 text-sm text-subtle">
+
+            Respons·vel atual: <span className="font-medium text-foreground">{responsavelAtual}</span>
+
+          </p>
+
+        </section>
+
+
+
+        {canAssign ? (
+
+          <section>
+
+            <h3 className="text-sm font-semibold text-foreground">Atribuir responsavel</h3>
+
+            <p className="mt-1 text-xs text-muted-foreground">
+
+              Escolha um membro ativo da conta para acompanhar este lead. A IA tambem pode sugerir automaticamente.
+
+            </p>
+
+            <form onSubmit={handleSubmit} className="mt-3 space-y-3">
+
+              <Select
+
+                value={selectedResponsavel}
+
+                onChange={(event) => setSelectedResponsavel(event.target.value)}
+
+              >
+
+                <option value="">Sem responsavel</option>
+
+                {usuariosAtivos.map((usuario) => (
+
+                  <option key={usuario.id} value={String(usuario.id)}>
+
+                    {usuario.nome} ({usuario.papel ?? 'Sem papel'})
+
+                  </option>
+
+                ))}
+
+              </Select>
+
+              <div className="flex items-center gap-3">
+
+                <Button type="submit" size="sm" disabled={assignMutation.isPending || isLoadingUsuarios}>
+
+                  {assignMutation.isPending ? 'Salvando...' : 'Atualizar responsavel'}
+
+                </Button>
+
+                {isLoadingUsuarios ? (
+
+                  <span className="text-xs text-muted-foreground">Carregando usuarios...</span>
+
+                ) : null}
+
+                {!isLoadingUsuarios && usuariosAtivos.length === 0 ? (
+
+                  <span className="text-xs text-muted-foreground">Nenhum usuario ativo disponivel.</span>
+
+                ) : null}
+
+                {contaUsuarios.isError ? (
+
+                  <span className="text-xs text-red-600">Nao foi possivel carregar os usuarios.</span>
+
+                ) : null}
+
+              </div>
+
+              {feedback ? (
+
+                <p className={`text-xs ${feedback.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+
+                  {feedback.message}
+
+                </p>
+
+              ) : null}
+
+            </form>
+
+          </section>
+
+        ) : (
+
+          <section>
+
+            <h3 className="text-sm font-semibold text-foreground">AtribuiÁ„o de respons·vel</h3>
+
+            <p className="mt-2 text-xs text-muted-foreground">
+
+              Somente gestores ou administradores podem alterar o respons·vel do lead.
+
+            </p>
+
+          </section>
+
+        )}
+
+
+
+        <section>
+          <h3 className="text-sm font-semibold text-foreground">Valor da negociaÁ„o</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Atual: <span className="font-medium text-foreground">{valorAtual}</span>
+          </p>
+          <form onSubmit={handleValorSubmit} className="mt-3 flex flex-wrap items-end gap-3">
+            <div className="flex min-w-[220px] flex-1 flex-col gap-2">
+              <label className="text-xs font-medium text-foreground" htmlFor="lead-valor-negociacao">
+                Valor estimado
+              </label>
+              <Input
+                id="lead-valor-negociacao"
+                type="number"
+                step="0.01"
+                min="0"
+                value={valorNegociacao}
+                onChange={(event) => setValorNegociacao(event.target.value)}
+                placeholder="Ex: 1500"
+              />
+            </div>
+            <Button type="submit" size="sm" disabled={isSavingValor}>
+              {isSavingValor ? 'Salvando...' : 'Salvar valor'}
+            </Button>
+          </form>
+          {valorFeedback ? (
+            <p className={`mt-2 text-xs ${valorFeedback.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+              {valorFeedback.message}
+            </p>
+          ) : null}
+        </section>
+
+        <section>
+          <h3 className="text-sm font-semibold text-foreground">InformaÁıes relevantes</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            InformaÁıes do lead que ajudam a IA e o time a interpretar as mensagens.
+          </p>
+          <form onSubmit={handleObservacoesSubmit} className="mt-3 space-y-3">
+            <Textarea
+              id="lead-observacoes"
+              value={observacoesLead}
+              onChange={(event) => setObservacoesLead(event.target.value)}
+              placeholder="Ex: prefere contato por WhatsApp, ja pediu proposta, perfil decisor..."
+              maxLength={2000}
+            />
+            <div className="flex items-center gap-3">
+              <Button type="submit" size="sm" disabled={isSavingObservacoes}>
+                {isSavingObservacoes ? 'Salvando...' : 'Salvar observaÁıes'}
+              </Button>
+              {observacoesFeedback ? (
+                <span className={`text-xs ${observacoesFeedback.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+                  {observacoesFeedback.message}
+                </span>
+              ) : null}
+            </div>
+          </form>
+        </section>
+
+        <section className="space-y-3">
 
           <h3 className="text-sm font-semibold text-foreground">Conversas recentes</h3>
 
-          <div ref={mensagensContainerRef}
-            className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-xl border border-border bg-muted/20 p-3 pr-2">
+          <div className="flex max-h-80 flex-col gap-2 overflow-y-auto rounded-xl border border-border bg-muted/20 p-3 pr-2">
 
             {mensagensOrdenadas.length ? (
 
@@ -577,16 +727,8 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
                 const mediaUrl = resolveMensagemMidiaUrl(msg);
                 const imageUrl = tipoMidia === 'imagem' ? mediaUrl : null;
                 const audioUrl = tipoMidia === 'audio' ? mediaUrl : null;
-                const audioSrc = audioUrl ? `${audioUrl}${audioUrl.includes('?') ? '&' : '?'}t=${msg.msg_id}` : null;
                 const texto = msg.msg_conteudo ?? '';
-                const textoTrim = texto.trim();
-                const textoLower = textoTrim.toLowerCase();
-                const textoNormalizado = textoLower.replace(/[^a-z]/g, '');
-                const textoEhPlaceholderImagem =
-                  Boolean(imageUrl) && (textoNormalizado === 'imagem' || textoNormalizado === 'image');
-                const textoEhPlaceholderAudio =
-                  Boolean(audioUrl) && (textoNormalizado === 'audio' || textoNormalizado === 'udio');
-                const hasTexto = textoTrim.length > 0 && !textoEhPlaceholderImagem && !textoEhPlaceholderAudio;
+                const hasTexto = texto.trim().length > 0;
 
 
 
@@ -604,8 +746,7 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
 
                       className={cn(
 
-                        'relative rounded-2xl px-3 py-2 text-sm shadow-sm transition',
-                        audioUrl ? 'w-full max-w-full' : 'max-w-[80%]',
+                        'relative max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm transition',
 
                         isInbound
 
@@ -627,7 +768,11 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
                         </a>
                       ) : null}
 
-                      {audioSrc ? <AudioPlayer src={audioSrc} /> : null}
+                      {audioUrl ? (
+                        <audio className="mt-1 w-full max-w-xs" controls preload="metadata" src={audioUrl}>
+                          Seu navegador nao suporta reproducao de audio.
+                        </audio>
+                      ) : null}
 
                       {hasTexto ? (
                         <p
@@ -679,164 +824,12 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
           </div>
 
         </section>
-        </div>
-
-        <div className="order-1 min-h-0 space-y-6 overflow-y-auto lg:order-2">
-          <section>
-
-          <div className="flex flex-wrap items-center gap-3">
-
-            <StatusBadge status={lead.led_status} />
-
-            <span className="text-sm text-muted-foreground">
-
-              Confianca: {Math.round((lead.led_status_conf ?? 0) * 100)}%
-
-            </span>
-
-          </div>
-
-          <p className="mt-2 text-sm text-subtle">
-
-            Respons√°vel atual: <span className="font-medium text-foreground">{responsavelAtual}</span>
-
-          </p>
-
-        </section>
-
-
-
-        {canAssign ? (
-
-          <section>
-
-            <h3 className="text-sm font-semibold text-foreground">Atribuir responsavel</h3>
-
-            <p className="mt-1 text-xs text-muted-foreground">
-
-              Escolha um membro ativo da conta para acompanhar este lead. A IA tambem pode sugerir automaticamente.
-
-            </p>
-
-            <form onSubmit={handleSubmit} className="mt-3 space-y-3">
-              <div className="flex flex-wrap items-end gap-3">
-                <div className="min-w-[220px] flex-1">
-                  <Select
-                    value={selectedResponsavel}
-                    onChange={(event) => setSelectedResponsavel(event.target.value)}
-                  >
-                    <option value="">Sem responsavel</option>
-                    {usuariosAtivos.map((usuario) => (
-                      <option key={usuario.id} value={String(usuario.id)}>
-                        {usuario.nome} ({usuario.papel ?? 'Sem papel'})
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-                <Button type="submit" size="sm" disabled={assignMutation.isPending || isLoadingUsuarios}>
-                  {assignMutation.isPending ? 'Salvando...' : 'Salvar'}
-                </Button>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                {isLoadingUsuarios ? (
-                  <span className="text-xs text-muted-foreground">Carregando usuarios...</span>
-                ) : null}
-                {!isLoadingUsuarios && usuariosAtivos.length === 0 ? (
-                  <span className="text-xs text-muted-foreground">Nenhum usuario ativo disponivel.</span>
-                ) : null}
-                {contaUsuarios.isError ? (
-                  <span className="text-xs text-red-600">Nao foi possivel carregar os usuarios.</span>
-                ) : null}
-              </div>
-
-              {feedback ? (
-                <p className={`text-xs ${feedback.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
-                  {feedback.message}
-                </p>
-              ) : null}
-            </form>
-
-          </section>
-
-        ) : (
-
-          <section>
-
-            <h3 className="text-sm font-semibold text-foreground">Atribui√ß√£o de respons√°vel</h3>
-
-            <p className="mt-2 text-xs text-muted-foreground">
-
-              Somente gestores ou administradores podem alterar o respons√°vel do lead.
-
-            </p>
-
-          </section>
-
-        )}
 
 
 
         <section>
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="text-sm font-semibold text-foreground">Valor da negociacao</h3>
-          </div>
-          <form onSubmit={handleValorSubmit} className="mt-2 flex flex-wrap items-center gap-2">
-            <label className="sr-only" htmlFor="lead-valor-negociacao">
-              Valor estimado
-            </label>
-            <Input
-              id="lead-valor-negociacao"
-              type="number"
-              step="0.01"
-              min="0"
-              value={valorNegociacao}
-              onChange={(event) => setValorNegociacao(event.target.value)}
-              placeholder="Valor"
-              className="w-32 sm:w-40"
-            />
-            <Button type="submit" size="sm" disabled={isSavingValor}>
-              {isSavingValor ? 'Salvando...' : 'Salvar'}
-            </Button>
-          </form>
-          {valorFeedback ? (
-            <p className={`mt-2 text-xs ${valorFeedback.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
-              {valorFeedback.message}
-            </p>
-          ) : null}
-        </section>
 
-        <section>
-          <h3 className="text-sm font-semibold text-foreground">Informa√ß√µes relevantes</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Informa√ß√µes do lead que ajudam a IA e o time a interpretar as mensagens.
-          </p>
-          <form onSubmit={handleObservacoesSubmit} className="mt-3 space-y-3">
-            <Textarea
-              id="lead-observacoes"
-              value={observacoesLead}
-              onChange={(event) => setObservacoesLead(event.target.value)}
-              placeholder="Ex: prefere contato por WhatsApp, ja pediu proposta, perfil decisor..."
-              maxLength={2000}
-            />
-            <div className="flex items-center gap-3">
-              <Button type="submit" size="sm" disabled={isSavingObservacoes}>
-                {isSavingObservacoes ? 'Salvando...' : 'Salvar observa√ß√µes'}
-              </Button>
-              {observacoesFeedback ? (
-                <span className={`text-xs ${observacoesFeedback.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
-                  {observacoesFeedback.message}
-                </span>
-              ) : null}
-            </div>
-          </form>
-        </section>
-        </div>
-
-        <div className="order-2 min-h-0 space-y-6 overflow-y-auto lg:order-3">
-          <section>
-
-          <h3 className="text-sm font-semibold text-foreground">Sugest√µes da IA</h3>
+          <h3 className="text-sm font-semibold text-foreground">Sugestıes da IA</h3>
 
           {sugestaoIa ? (
             <div className="mt-3 space-y-3 rounded-xl border border-border bg-muted/20 p-4">
@@ -865,7 +858,7 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
                 ) : null}
                 {sugestaoResponsavelId !== null ? (
                   <div>
-                    Respons√°vel sugerido:{' '}
+                    Respons·vel sugerido:{' '}
                     <span className="font-medium text-foreground">
                       {sugestaoResponsavelNome
                         ? `${sugestaoResponsavelNome} (#${sugestaoResponsavelId})`
@@ -882,7 +875,7 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
               </div>
               {!canAssign && sugestaoResponsavelId !== null ? (
                 <p className="text-xs text-muted-foreground">
-                  Somente gestores ou administradores podem aplicar o respons√°vel sugerido.
+                  Somente gestores ou administradores podem aplicar o respons·vel sugerido.
                 </p>
               ) : null}
               <div className="flex flex-wrap items-center gap-2">
@@ -896,7 +889,7 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
                 </Button>
                 {!temSugestoesAplicaveis ? (
                   <span className="text-xs text-muted-foreground">
-                    Nenhuma sugest√£o pendente para aplicar.
+                    Nenhuma sugest„o pendente para aplicar.
                   </span>
                 ) : null}
               </div>
@@ -909,181 +902,22 @@ export const LeadDrawer = ({ lead, open, onOpenChange }: LeadDrawerProps) => {
           ) : (
             <div className="mt-2 space-y-2 text-sm text-subtle">
               <p>
-                Quando a IA processar novas mensagens, as sugest√µes aparecer√£o aqui para facilitar a decis√£o do time.
+                Quando a IA processar novas mensagens, as sugestıes aparecerıo aqui para facilitar a decis„o do time.
               </p>
               {ultimaAuditoriaErro ? (
-                <p className="text-xs text-red-600">A √∫ltima tentativa da IA retornou erro.</p>
+                <p className="text-xs text-red-600">A ˙ltima tentativa da IA retornou erro.</p>
               ) : null}
             </div>
           )}
 
         </section>
-        </div>
-      </div>
 
+      </div>
 
     </Drawer>
 
   );
 
-};
-
-
-
-let activeAudioElement: HTMLAudioElement | null = null;
-
-const formatAudioTime = (value: number) => {
-  if (!Number.isFinite(value)) return '0:00';
-  const totalSeconds = Math.max(0, Math.floor(value));
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, '0')}`;
-};
-
-const AudioPlayer = ({ src }: { src: string }) => {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const progress = duration > 0 ? currentTime / duration : 0;
-
-  const readDuration = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const next = audio.duration;
-    if (Number.isFinite(next) && next > 0) {
-      setDuration(next);
-      return;
-    }
-
-    if (audio.seekable && audio.seekable.length) {
-      const end = audio.seekable.end(audio.seekable.length - 1);
-      if (Number.isFinite(end) && end > 0) {
-        setDuration(end);
-      }
-    }
-  };
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const handlePlay = () => {
-      if (activeAudioElement && activeAudioElement !== audio) {
-        activeAudioElement.pause();
-      }
-      activeAudioElement = audio;
-      setIsPlaying(true);
-      readDuration();
-    };
-    const handlePause = () => {
-      if (activeAudioElement === audio) {
-        activeAudioElement = null;
-      }
-      setIsPlaying(false);
-    };
-    const handleEnded = () => {
-      if (activeAudioElement === audio) {
-        activeAudioElement = null;
-      }
-      setIsPlaying(false);
-    };
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime || 0);
-    const handleLoaded = () => readDuration();
-    const handleDurationChange = () => readDuration();
-    const handleCanPlay = () => readDuration();
-
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoaded);
-    audio.addEventListener('durationchange', handleDurationChange);
-    audio.addEventListener('canplay', handleCanPlay);
-
-    audio.load();
-    setCurrentTime(0);
-    readDuration();
-
-    return () => {
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoaded);
-      audio.removeEventListener('durationchange', handleDurationChange);
-      audio.removeEventListener('canplay', handleCanPlay);
-    };
-  }, [src]);
-
-  const togglePlay = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (audio.paused) {
-      const playPromise = audio.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(() => {
-          // Ignora erros de autoplay/bloqueio
-        });
-      }
-    } else {
-      audio.pause();
-    }
-  };
-
-  const handleSeek = (nextValue: number) => {
-    const audio = audioRef.current;
-    if (!audio || !Number.isFinite(duration) || duration <= 0) return;
-    const clamped = Math.max(0, Math.min(duration, nextValue));
-    audio.currentTime = clamped;
-    setCurrentTime(clamped);
-  };
-
-  return (
-    <div className="mt-1 flex w-full min-w-0 items-center gap-2 rounded-full border border-border bg-background/70 px-2 py-1">
-      <button
-        type="button"
-        onClick={togglePlay}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
-        aria-label={isPlaying ? 'Pausar audio' : 'Reproduzir audio'}
-      >
-        {isPlaying ? (
-          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-            <rect x="6" y="5" width="4" height="14" rx="1" />
-            <rect x="14" y="5" width="4" height="14" rx="1" />
-          </svg>
-        ) : (
-          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        )}
-      </button>
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <div className="relative h-2 min-w-[72px] flex-1 rounded-full bg-muted">
-          <div
-            className="h-2 rounded-full bg-primary"
-            style={{ width: `${Math.round(progress * 100)}%` }}
-          />
-          <input
-            type="range"
-            min={0}
-            max={duration || 0}
-            step={0.1}
-            value={currentTime}
-            onChange={(event) => handleSeek(Number(event.target.value))}
-            className="absolute inset-0 h-2 w-full cursor-pointer opacity-0"
-            aria-label="Posicao do audio"
-          />
-        </div>
-        <div className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
-          {formatAudioTime(currentTime)} / {formatAudioTime(duration)}
-        </div>
-      </div>
-      <audio ref={audioRef} src={src} preload="auto" />
-    </div>
-  );
 };
 
 const resolveMensagemMidiaUrl = (mensagem: NonNullable<Lead['mensagens']>[number]) => {

@@ -19,8 +19,8 @@ export const Modal: React.FC<ModalProps> = ({ open, onOpenChange, title, descrip
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-lg rounded-xl bg-surface p-6 shadow-xl">
-        <div className="mb-4">
+      <div className="flex w-full max-w-lg max-h-[90vh] flex-col overflow-hidden rounded-xl bg-surface p-6 shadow-xl">
+        <div className="mb-4 shrink-0">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold text-foreground">{title}</h2>
@@ -36,8 +36,10 @@ export const Modal: React.FC<ModalProps> = ({ open, onOpenChange, title, descrip
             </button>
           </div>
         </div>
-        <div className="space-y-4 text-sm text-foreground">{children}</div>
-        {footer ? <div className="mt-6 flex justify-end gap-2">{footer}</div> : null}
+        <div className="flex-1 space-y-4 overflow-y-auto text-sm text-foreground">
+          {children}
+        </div>
+        {footer ? <div className="mt-6 flex shrink-0 justify-end gap-2">{footer}</div> : null}
       </div>
     </div>,
     container
