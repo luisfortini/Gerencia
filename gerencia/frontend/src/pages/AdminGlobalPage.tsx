@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 import { isAxiosError } from "axios";
 
 import type { ContaResumo } from "@/types";
@@ -45,6 +47,35 @@ import { api } from '@/lib/api';
 
 type FeedbackState = { type: "success" | "error"; message: string } | null;
 
+const INVALID_CONTA_VALUES = new Set(['', 'null', 'undefined']);
+
+
+
+const readStoredContaId = (): number | null => {
+
+  if (typeof window === 'undefined') {
+
+    return null;
+
+  }
+
+
+
+  const stored = localStorage.getItem('gerencia_conta');
+
+  if (!stored || INVALID_CONTA_VALUES.has(stored)) {
+
+    return null;
+
+  }
+
+
+
+  const parsed = Number.parseInt(stored, 10);
+
+  return Number.isFinite(parsed) ? parsed : null;
+
+};
 
 
 type ContaFormState = {
@@ -169,6 +200,9 @@ export const AdminGlobalPage = () => {
   const deleteContaMutation = useDeleteConta();
 
 
+  const queryClient = useQueryClient();
+
+
 
   const [baseUrl, setBaseUrl] = useState("");
 
@@ -192,6 +226,9 @@ export const AdminGlobalPage = () => {
   const [contaListFeedback, setContaListFeedback] = useState<FeedbackState>(null);
 
   const [deletingContaId, setDeletingContaId] = useState<number | null>(null);
+
+
+  const [activeContaId, setActiveContaId] = useState<number | null>(() => readStoredContaId());
 
 
 
@@ -221,6 +258,23 @@ export const AdminGlobalPage = () => {
         : 'Criar conta'
       : 'Salvar alteracoes';
 
+
+
+  const activeContaLabel = useMemo(() => {
+
+    if (!activeContaId) {
+
+      return 'Nenhuma';
+
+    }
+
+
+
+    const conta = contas.find((item) => item.cta_id === activeContaId);
+
+    return conta?.cta_nome ? `${conta.cta_nome} (#${conta.cta_id})` : `Conta #${activeContaId}`;
+
+  }, [activeContaId, contas]);
 
 
   const resetContaForm = () => {
@@ -623,6 +677,59 @@ export const AdminGlobalPage = () => {
 
 
 
+  const handleAccessConta = (conta: ContaResumo) => {
+
+    if (typeof window === 'undefined') {
+
+      return;
+
+    }
+
+
+
+    localStorage.setItem('gerencia_conta', String(conta.cta_id));
+    queryClient.clear();
+
+    setActiveContaId(conta.cta_id);
+
+    setContaListFeedback({
+
+      type: 'success',
+
+      message: `Conta ativa definida: ${conta.cta_nome}.`,
+
+    });
+
+  };
+
+
+  const handleClearConta = () => {
+
+    if (typeof window === 'undefined') {
+
+      return;
+
+    }
+
+
+
+    localStorage.removeItem('gerencia_conta');
+
+    queryClient.clear();
+
+    setActiveContaId(null);
+
+    setContaListFeedback({
+
+      type: 'success',
+
+      message: 'Conta ativa removida.',
+
+    });
+
+  };
+
+
   return (
 
     <div className="space-y-6">
@@ -844,6 +951,31 @@ export const AdminGlobalPage = () => {
           ) : null}
 
 
+          <div className="flex flex-wrap items-center gap-2">
+
+            <p className="text-xs text-muted-foreground">Conta ativa: {activeContaLabel}</p>
+
+            <Button
+
+              type="button"
+
+              size="sm"
+
+              variant="ghost"
+
+              onClick={handleClearConta}
+
+              disabled={!activeContaId}
+
+            >
+
+              Limpar selecao
+
+            </Button>
+
+          </div>
+
+
 
           {contasLoading ? <p className="text-sm text-muted-foreground">Carregando contas cadastradas...</p> : null}
 
@@ -960,6 +1092,44 @@ export const AdminGlobalPage = () => {
                       <TableCell>
 
                         <div className="flex flex-wrap gap-2">
+
+
+
+                          <Button
+
+
+
+                            type="button"
+
+
+
+                            size="sm"
+
+
+
+                            variant="outline"
+
+
+
+                            onClick={() => handleAccessConta(conta)}
+
+
+
+                            disabled={activeContaId === conta.cta_id}
+
+
+
+                          >
+
+
+
+                            {activeContaId === conta.cta_id ? 'Em uso' : 'Acessar'}
+
+
+
+                          </Button>
+
+
 
                           <Button
 

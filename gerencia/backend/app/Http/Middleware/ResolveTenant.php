@@ -28,8 +28,6 @@ class ResolveTenant
             if (! $contaId) {
                 $contaId = Conta::query()->value('cta_id');
             }
-        } elseif ($request->hasHeader('X-Conta-Id')) {
-            $contaId = (int) $request->header('X-Conta-Id');
         }
 
         if (! $contaId) {
