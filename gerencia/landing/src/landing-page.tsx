@@ -45,6 +45,8 @@ const planos = [
     usuarios: "3 usuários",
     precoMensal: 99,
     precoAnualMensal: 79.9,
+    checkoutMensal: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=58d7c67bdafd43a18b4db593d8169731",
+    checkoutAnual: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=685c203632fb46d6a81189d5973425f4",
     cta: "Quero começar com o Start",
     recursos: [
       "Integração com WhatsApp e dashboards em tempo real",
@@ -57,6 +59,8 @@ const planos = [
     usuarios: "5 usuários",
     precoMensal: 179.9,
     precoAnualMensal: 149.9,
+    checkoutMensal: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=a90d6fd7279c42dca380ea747a66be66",
+    checkoutAnual: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=6b116292307546fdb4b6f2f3c6412ff1",
     cta: "Quero o plano Pro",
     destaque: true,
     recursos: [
@@ -87,6 +91,32 @@ export const LandingPage = () => {
     (max, plano) => Math.max(max, Math.round((1 - plano.precoAnualMensal / plano.precoMensal) * 100)),
     0
   );
+  const trackCheckoutClick = (planoNome: string, ciclo: "mensal" | "anual", url: string) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const payload = { plan: planoNome, billingCycle: ciclo, url };
+    window.dispatchEvent(new CustomEvent("gerencia_checkout_click", { detail: payload }));
+
+    const win = window as typeof window & {
+      gtag?: (...args: any[]) => void;
+      dataLayer?: Array<Record<string, unknown>>;
+      plausible?: (event: string, options?: { props?: Record<string, unknown> }) => void;
+    };
+
+    if (typeof win.gtag === "function") {
+      win.gtag("event", "checkout_click", payload);
+    }
+
+    if (Array.isArray(win.dataLayer)) {
+      win.dataLayer.push({ event: "gerencia_checkout_click", ...payload });
+    }
+
+    if (typeof win.plausible === "function") {
+      win.plausible("Checkout Click", { props: payload });
+    }
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0C1E3C] text-[#E6E6E6]">
@@ -136,15 +166,44 @@ export const LandingPage = () => {
                 Conecte o seu WhatsApp e veja o GerêncIA transformar conversas em dados, classificar leads
                 automaticamente e revelar onde o seu dinheiro está sendo perdido.
               </p>
+              <p className="mt-4 text-sm font-semibold text-[#00C2FF]">
+                Configure em apenas 3 minutos e comece a operar na hora.
+              </p>
               <SectionCTA href="#solucao" label="Quero ver como funciona" />
             </div>
             <div className="relative overflow-hidden rounded-3xl border border-[#00C2FF]/30 bg-[#102746]/80 p-3 shadow-lg shadow-black/30">
               <img
                 src={dashHero}
-                alt="Tela do dashboard principal do Gerencia"
+                alt="Tela do dashboard principal do GerêncIA"
                 className="h-full w-full rounded-2xl object-cover"
                 loading="lazy"
               />
+            </div>
+          </div>
+        </section>
+
+        <section id="video" className="rounded-3xl border border-[#1B335A] bg-[#0E2447]/80 p-8 shadow-lg shadow-black/25 md:p-12">
+          <div className="grid gap-8 md:grid-cols-[0.9fr,1.1fr] md:items-center">
+            <div>
+              <h2 className="text-3xl font-semibold text-white md:text-4xl">
+                Veja o GerêncIA em ação em menos de 3 minutos.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-[#C6E3F2]">
+                Um tour rápido mostrando como conectar o WhatsApp, organizar os leads e acompanhar as oportunidades
+                em tempo real.
+              </p>
+              <SectionCTA href="#planos" label="Quero ver os planos" />
+            </div>
+            <div className="relative overflow-hidden rounded-3xl border border-[#00C2FF]/30 bg-[#102746]/80 p-3 shadow-lg shadow-black/30">
+              <div className="relative w-full overflow-hidden rounded-2xl" style={{ paddingTop: "56.25%" }}>
+                <iframe
+                  className="absolute inset-0 h-full w-full"
+                  src="https://www.youtube.com/embed/Asu_7_iGfow"
+                  title="Apresentação do GerêncIA"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -193,7 +252,7 @@ export const LandingPage = () => {
               <div className="relative overflow-hidden rounded-3xl border border-[#00C2FF]/30 bg-[#102746]/80 p-3 shadow-lg shadow-black/30">
                 <img
                   src={dashSolution}
-                  alt="Integração do WhatsApp e painel do Gerência"
+                  alt="Integração do WhatsApp e painel do GerêncIA"
                   className="h-full w-full rounded-2xl object-cover"
                   loading="lazy"
                 />
@@ -222,7 +281,7 @@ export const LandingPage = () => {
               <div className="relative overflow-hidden rounded-3xl border border-[#00C2FF]/30 bg-[#102746]/80 p-3 shadow-lg shadow-black/30">
                 <img
                   src={kanbanImage}
-                  alt="Quadro kanban do Gerência"
+                  alt="Quadro kanban do GerêncIA"
                   className="h-full w-full rounded-2xl object-cover"
                   loading="lazy"
                 />
@@ -247,7 +306,7 @@ export const LandingPage = () => {
               <div className="relative overflow-hidden rounded-3xl border border-[#00C2FF]/30 bg-[#102746]/80 p-3 shadow-lg shadow-black/30">
                 <img
                   src={listaImage}
-                  alt="Comparativo de lista automatizada do Gerência"
+                  alt="Comparativo de lista automatizada do GerêncIA"
                   className="h-full w-full rounded-2xl object-cover"
                   loading="lazy"
                 />
@@ -303,6 +362,7 @@ export const LandingPage = () => {
                   ? "Cobrança mensal, cancele quando quiser."
                   : `${totalAnualFormatado} cobrados uma vez ao ano · Economize ${economia}%`;
               const rotuloCiclo = billingCycle === "mensal" ? "Plano mensal" : "Plano anual";
+              const checkoutUrl = billingCycle === "mensal" ? plano.checkoutMensal : plano.checkoutAnual;
 
               return (
                 <article
@@ -337,7 +397,10 @@ export const LandingPage = () => {
                     ))}
                   </ul>
                   <a
-                    href={`${appUrl}/login`}
+                    href={checkoutUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => trackCheckoutClick(plano.nome, billingCycle, checkoutUrl)}
                     className={`mt-auto inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00C2FF] ${
                       plano.destaque
                         ? "bg-[#00C2FF] text-[#0C1E3C] hover:bg-[#29d2ff]"
@@ -392,8 +455,6 @@ const BackgroundGlow = () => (
     <div className="absolute bottom-[-240px] left-[-120px] h-[360px] w-[360px] rounded-full bg-[#4D6C8C]/25 blur-[160px]" />
   </div>
 );
-
-
 
 
 
